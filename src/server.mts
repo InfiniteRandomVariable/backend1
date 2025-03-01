@@ -1,0 +1,41 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import phonesRouter from "./api/phones.mjs"; // Ensure correct extension and path
+import usersRouter from "./api/users.mjs";
+
+dotenv.config();
+
+export const app = express();
+const port = process.env.PORT || 3002;
+var allowedOrigins = [`http://localhost:${port}`, "http://yourapp.com"];
+// Apply middleware functions directly
+//app.use(cors); // Explicitly cast cors as RequestHandler
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        var msg =
+          "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+  })
+);
+
+app.use(express.json()); // Explicitly cast express.json()
+
+app.use("/api/users", usersRouter); // Use users router
+app.use("/api/phones", phonesRouter);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+app
+  .listen(port, () => {
+    console.log(`Backend server is running on port ${port}`);
+  })
+  .on("error", (err) => {
+    // Add error listener for server
+    console.error("Server error:", err);
+  });

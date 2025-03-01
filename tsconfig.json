@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext", // Changed from "commonjs" to "esnext"
+    "moduleResolution": "node", // Keep "node" or "nodenext" - "node" is generally fine
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true // Add this to support importing JSON files as modules if needed
+  },
+  "include": ["src", "db/kysely-types.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}
