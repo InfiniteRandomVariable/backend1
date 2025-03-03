@@ -33,6 +33,7 @@ export enum UserRolesEnum {
   Arbiter = "ARBITER",
   Staff = "STAFF",
   Admin = "ADMIN",
+  BuyerSeller = "BUYER_SELLER",
 }
 
 // You can optionally export it as a const object as well for different use cases

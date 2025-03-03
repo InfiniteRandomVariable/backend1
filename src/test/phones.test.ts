@@ -34,7 +34,10 @@ describe("Phones API Endpoints", () => {
         currency: "USD",
       } as Phone;
 
-      await db.insertInto("og.phones").values(seedPhone).execute();
+      await db
+        .insertInto("og.phones")
+        .values(seedPhone as any)
+        .execute();
       const response = await request(app).get("/api/phones");
       expect(response.status).toBe(200);
       expect(response.body.length).toBeGreaterThan(0);

@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import phonesRouter from "./api/phones.mjs"; // Ensure correct extension and path
 import usersRouter from "./api/users.mjs";
-
+import { Request, Response } from "express";
 dotenv.config();
 
 export const app = express();
@@ -27,10 +27,22 @@ app.use(
 
 app.use(express.json()); // Explicitly cast express.json()
 
+const testMiddleware = (req: Request, res: Response, next: any) => {
+  console.log("testMiddleware: before next");
+  next();
+  console.log("testMiddleware: after next"); // Should NOT see this if next() works correctly
+};
+
+const testRouteHandler = (req: Request, res: Response) => {
+  console.log("testRouteHandler: Route handler called!");
+  res.send("Route handler was called!");
+};
+
+app.get("/test", testMiddleware, testRouteHandler);
+
 app.use("/api/users", usersRouter); // Use users router
 app.use("/api/phones", phonesRouter);
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+
 app
   .listen(port, () => {
     console.log(`Backend server is running on port ${port}`);
