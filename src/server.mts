@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import phonesRouter from "./api/phones.mjs"; // Ensure correct extension and path
 import usersRouter from "./api/users.mjs";
+import listingsRouter from "./api/listings.mts";
+import arbiterRouter from "./api/arbiter.mts";
 import { Request, Response } from "express";
 dotenv.config();
 
@@ -42,7 +44,8 @@ app.get("/test", testMiddleware, testRouteHandler);
 
 app.use("/api/users", usersRouter); // Use users router
 app.use("/api/phones", phonesRouter);
-
+app.use("/api/listings", listingsRouter);
+app.use("/api/arbiter", arbiterRouter);
 app
   .listen(port, () => {
     console.log(`Backend server is running on port ${port}`);

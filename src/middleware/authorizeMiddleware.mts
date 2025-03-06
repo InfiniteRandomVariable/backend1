@@ -4,12 +4,18 @@ import { UserRolesEnum } from "../db/types.mts"; // Assuming you have an enum fo
 import { AuthRequest } from "./authMiddleware.mts"; // Import the extended Request type
 import { getTokenByUserId } from "../controllers/user.controller.mts";
 import { getMatchingElements } from "../utils/commonUtil.mts";
+
+//Check if the client JWT is matching the server side segment of the JWT when the JWT is created.
+
 export const authorizeRole =
   (allowedRoles: UserRolesEnum[]) =>
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     console.log("authorizeRole");
     const user = req.user;
     console.log("user", user);
+
+    //Conside to add user salt matchint the one provided by the client side to the server side.
+    //let didMatchUserSalt = false;
 
     if (!user || !user.id || !user.jwtstr) {
       // Assuming 'role' is in your JWT payload
@@ -27,12 +33,15 @@ export const authorizeRole =
         return userRole;
       } else if (t.arbiterHash != "" && user.jwtstr.includes(t.arbiterHash)) {
         const userRole = UserRolesEnum.Arbiter;
+
         return userRole;
       } else if (t.staffHash != "" && user.jwtstr.includes(t.staffHash)) {
         const userRole = UserRolesEnum.Staff;
+
         return userRole;
       } else if (t.adminHash != "" && user.jwtstr.includes(t.adminHash)) {
         const userRole = UserRolesEnum.Admin;
+
         return userRole;
       } else {
         return "";
