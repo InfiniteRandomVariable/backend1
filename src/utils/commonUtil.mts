@@ -2,6 +2,13 @@
 import fs from "fs/promises";
 import { UserRolesEnum } from "../db/types.mts";
 import { isValidPhoneNumber } from "libphonenumber-js";
+
+import dotenv from "dotenv";
+dotenv.config();
+export function isDevEnviroment() {
+  const env = process.env.PRODUCTION_ENV;
+  return env === "dev";
+}
 // import fs from "fs";
 export function getRandomNumberInRange(min: number, max: number) {
   // Calculate the range (inclusive of min and max)
@@ -26,8 +33,8 @@ export function getMatchingElements(array1: any[], array2: any[]) {
   });
   return matchingElements;
 }
-export const adminTrailingPassword = "#_#_";
-export const staffTrailingPassword = "!_!_!";
+export const adminTrailingPassword = "#_#_3_6!3-";
+export const staffTrailingPassword = "!_!_!6!3-";
 
 export function isPasswordValid(password: string, userRole: string) {
   if (userRole === UserRolesEnum.Admin) {
@@ -50,6 +57,18 @@ export function isPasswordValid(password: string, userRole: string) {
 //   }
 // }
 
+export function makeid(length: number) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
 export async function deleteAllLocalImages(files: any): Promise<void> {
   // Make the function async and return Promise<void>
   if (files && Array.isArray(files) && files.length > 0) {

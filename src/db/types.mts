@@ -26,6 +26,16 @@ export interface Database {
   items: ItemsTable; // Define tables here
 }
 // backend/src/db/types.ts (or your types file)
+export interface AuthStatusPayload {
+  // Keep this interface definition here as well if not already present
+  isSeller?: boolean | null;
+  isArbiter?: boolean | null;
+  isStaffAdmin?: boolean | null;
+  userStatus?: number | null; // {{ edit_1 }}
+  verifiedEmail?: boolean | null; // {{ edit_1 }}
+  verifiedPhone?: boolean | null; // {{ edit_1 }}
+  verifiedUserId?: boolean | null; // {{ edit_1 }}
+}
 
 export enum UserRolesEnum {
   Buyer = "BUYER",
@@ -33,7 +43,6 @@ export enum UserRolesEnum {
   Arbiter = "ARBITER",
   Staff = "STAFF",
   Admin = "ADMIN",
-  BuyerSeller = "BUYER_SELLER",
 }
 
 // You can optionally export it as a const object as well for different use cases
@@ -71,6 +80,7 @@ export enum UserStatus {
 export interface DB {
   // ... other tables ...
   phoneVerifications: PhoneVerifications; // {{ edit_1 }}
+  "og.authStatus": OgAuthStatus; // {{ edit_2 }}
 }
 
 export interface PhoneVerifications {
@@ -84,8 +94,7 @@ export enum PurchaseOfferStatus {
   AcceptedBySeller = 2,
   RejectedBySeller = 3,
   BuyerPaid = 4,
-  SellerShipped = 5,
-  товараПолучен = 6, // Example: товараПолучен (assuming "Goods Received" in Russian) - You should use English or your primary language for enum names
+  SellerShipped = 5, // Example: товараПолучен (assuming "Goods Received" in Russian) - You should use English or your primary language for enum names
   GoodsReceived = 6, // More standard English enum name
   DisputeOpened = 7,
   DisputeResolved = 8,
@@ -165,4 +174,38 @@ export enum ProductStatus {
    * Removed: Listing has been permanently removed from the platform, either by the seller or by platform administration (e.g., due to policy violation).
    */
   Removed = 14,
+}
+
+export interface OgAuthStatus {
+  // {{ edit_3 }}
+  id: number;
+  userIdFk: number;
+  isSeller: boolean | null;
+  isBuyer: boolean | null; // {{ edit_3 }}
+  isArbiter: boolean | null;
+  isStaffAdmin: boolean | null;
+  verifiedEmail: boolean | null;
+  verifiedPhone: boolean | null;
+  verifiedUserId: boolean | null;
+  userStatus: number | null; // Or the correct type for userStatus
+  // ... other columns in og.authStatus table ...
+}
+export interface ListingAndSellerInfo {
+  id: number;
+  status: number;
+  sellerUserIdFk: number;
+  sellerPhone: string | null;
+  sellerSnsTopicArn: string | null;
+}
+export enum NotificationType {
+  Offers = "offers",
+  Messages = "messages",
+  Purchases = "purchases",
+  RejectOffers = "rejectOffers",
+  Accepts = "accepts",
+  DisputeRequests = "disputeRequests",
+  DisputeRejections = "disputeRejections",
+  DisputeUpdates = "disputeUpdates",
+  SystemNotes = "systemNotes",
+  UrgentNotes = "urgentNotes",
 }

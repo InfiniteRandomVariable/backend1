@@ -4,6 +4,10 @@ import { jwt_verify } from "../controllers/user.controller.mts";
 import { JwtPayload } from "jsonwebtoken"; // Consider installing @types/jsonwebtoken for better type safety: npm i --save-dev @types/jsonwebtoken
 import { db } from "../db/database.mts"; // Consider checking your tsconfig.json to ensure '.mts' imports are correctly configured if you encounter issues. You might need to enable 'allowImportingTsExtensions'.
 // Assuming you have a secret key stored in environment variables
+import { UserRolesEnum } from "../db/types.mts"; // Assuming you have an enum for roles
+//import { getTokenByUserId } from "../controllers/user.controller.mts";
+import { getMatchingElements } from "../utils/commonUtil.mts";
+
 const JWT_SECRET = process.env.JWT_SECRET; // Replace with your actual secret
 
 export interface AuthRequest extends Request {
@@ -46,7 +50,7 @@ export const authenticate = (
   }
 };
 
-export const authenticateTokenUserRole = async (
+export const authenticateTokenUserAuth = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -63,16 +67,31 @@ export const authenticateTokenUserRole = async (
     console.log("user");
     console.log(user);
     console.log(user.id);
-    const dbUser = await db
-      .selectFrom("og.authStatus")
-      .where("userIdFk", "=", user.id)
-      .select(["userIdFk", "userStatus"])
-      .executeTakeFirst(); // Assuming userStatus is a number
+    const dbUserAndTokens = await db
+      .selectFrom("og.authStatus as authStatus")
+      .innerJoin("og.token as token", "authStatus.userIdFk", "token.userIdFk")
+      .selectAll("authStatus")
+      .select([
+        "token.buyerHash",
+        "token.sellerHash",
+        "token.arbiterHash",
+        "token.staffHash",
+        "token.adminHash",
+      ])
+      .where("authStatus.userIdFk", "=", user.id)
+      .execute();
 
-    if (!dbUser || dbUser.userStatus == null || dbUser.userStatus < 0)
+    const dbUser = dbUserAndTokens[0];
+
+    if (!dbUser || dbUser.userStatus == null || dbUser.userStatus < 0) {
+      console.log("authenticateTokenUserRole 73");
+      console.log(dbUser);
       return res.sendStatus(403);
+    }
+
     (req as AuthRequest).user = {
       ...user,
+      ...dbUser,
       status: dbUser.userStatus,
       jwtstr: token,
     }; // Add role to req.user
@@ -86,15 +105,107 @@ export const authenticateTokenUserRole = async (
   }
 };
 
-export const authorizeRole = (roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    console.log((req as any).user);
-    console.log("(req as any).user");
-    console.log(!roles.includes((req as any).user.role));
-    if (!(req as any).user || !roles.includes((req as any).user.role)) {
-      console.log("(req as any).user 2");
-      return res.sendStatus(403);
+export const authorizeRole =
+  (allowedRoles: UserRolesEnum[]) =>
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    console.log("authorizeRole");
+    const user = req.user;
+    console.log("user", user);
+
+    //Conside to add user salt matchint the one provided by the client side to the server side.
+    //let didMatchUserSalt = false;
+
+    if (!user || !user.id || !user.jwtstr || typeof user !== "object") {
+      // Assuming 'role' is in your JWT payload
+      return res
+        .status(403)
+        .json({ message: "Authorization failed: User role not found." }); // Or handle this as 401 if role is essential for auth
     }
-    next();
+    console.log("authorizeRole 2");
+    //const tokens = await getTokenByUserId(user.id);
+    //console.log("tokens", tokens);
+
+    const userEntries = Object.entries(user); // Get an array of [key, value] pairs
+    console.log("user.salt", user.salt);
+
+    const userRoles = userEntries.reduce((accumulator, [key, value]) => {
+      switch (key) {
+        case "isSeller":
+          if (value === true) {
+            if (
+              user.sellerHash != "" &&
+              user.jwtstr.includes(user.sellerHash)
+            ) {
+              accumulator.push(UserRolesEnum.Seller);
+            }
+          }
+          break;
+        case "isArbiter":
+          if (value === true) {
+            if (
+              user.arbiterHash != "" &&
+              user.jwtstr.includes(user.arbiterHash)
+            ) {
+              accumulator.push(UserRolesEnum.Arbiter);
+            }
+          }
+          break;
+        case "isStaffAdmin":
+          if (value === true) {
+            if (
+              !accumulator.includes(UserRolesEnum.Admin) &&
+              user.adminHash != "" &&
+              user.jwtstr.includes(user.adminHash)
+            ) {
+              accumulator.push(UserRolesEnum.Admin);
+            }
+
+            if (
+              !accumulator.includes(UserRolesEnum.Staff) &&
+              user.staffHash != "" &&
+              user.jwtstr.includes(user.staffHash)
+            ) {
+              accumulator.push(UserRolesEnum.Staff);
+            }
+          }
+          break;
+        default:
+          break;
+      }
+      return accumulator;
+    }, [] as UserRolesEnum[]);
+
+    console.log("authorizeRole 3");
+    console.log("userRoles", userRoles);
+    if (!userRoles && !Array.isArray(userRoles)) {
+      return res
+        .status(403)
+        .json({ message: "Authorization failed: User role not found." });
+    }
+
+    ///const userRole = user.role as UserRolesEnum; // Cast to your UserRolesEnum
+
+    const matchingRoles = getMatchingElements(userRoles, allowedRoles);
+    console.log("Authorizing");
+    if (matchingRoles.length > 0) {
+      console.log("Authorized!");
+      next(); // User is authorized, proceed
+    } else {
+      return res
+        .status(403)
+        .json({ message: "Authorization failed: Insufficient permissions." });
+    }
   };
-};
+
+// export const authorizeRole = (roles: string[]) => {
+//   return (req: Request, res: Response, next: NextFunction) => {
+//     console.log((req as any).user);
+//     console.log("(req as any).user");
+//     console.log(!roles.includes((req as any).user.role));
+//     if (!(req as any).user || !roles.includes((req as any).user.role)) {
+//       console.log("(req as any).user 2");
+//       return res.sendStatus(403);
+//     }
+//     next();
+//   };
+// };

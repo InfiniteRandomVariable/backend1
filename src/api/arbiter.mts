@@ -1,10 +1,13 @@
+//api/arbiter.ts
 import { Router } from "express";
 import { handleCreateArbiterProfile } from "../controllers/arbiter.controller.mjs"; // Controller path might need adjustment
 import { UserRolesEnum } from "../db/types.mts";
-import { authenticateTokenUserRole } from "../middleware/authMiddleware.mts";
-import { authorizeRole } from "../middleware/authorizeMiddleware.mts";
-// import { uploadImageS3 } from "../utils/imageManagerS3v1.mjs";
-// import { multerMiddleware } from "../middleware/multerMiddleware.mjs";
+import {
+  authorizeRole,
+  authenticateTokenUserAuth,
+} from "../middleware/authMiddleware.mts";
+import { uploadImageS3 } from "../utils/imageManagerS3v1.mjs";
+import { multerMiddleware } from "../middleware/multerMiddleware.mjs";
 const router = Router();
 /**
  * @route POST /api/arbiter/profiles  <-- Changed route path to /api/arbiter/profiles
@@ -13,8 +16,12 @@ const router = Router();
  */
 router.post(
   "/profiles", // <-- Changed route path to /profiles (relative to /api/arbiter)
-  authenticateTokenUserRole,
-  authorizeRole([UserRolesEnum.BuyerSeller, UserRolesEnum.Arbiter]),
+  authenticateTokenUserAuth,
+  authorizeRole([
+    UserRolesEnum.Buyer,
+    UserRolesEnum.Seller,
+    UserRolesEnum.Arbiter,
+  ]),
   handleCreateArbiterProfile
 );
 

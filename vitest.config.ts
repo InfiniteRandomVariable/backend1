@@ -3,6 +3,6 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["src/test/*.test.*ts"], // Adjust to your test file location
+    include: ["src/test/*.test.*ts", "src/test/api_e2e/*.test.*ts"], // Adjust to your test file location
   },
 });

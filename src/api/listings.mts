@@ -9,17 +9,20 @@ import {
   shuffleImages,
   uploadMoreImages,
   deleteImagesAPI,
+  getListingBySellerId,
 } from "../controllers/listing.controller.mts";
 import { multerMiddleware } from "../middleware/multerMiddleware.mjs";
 import { uploadImageS3 } from "../utils/imageManagerS3v1.mjs";
 import { UserRolesEnum } from "../db/types.mts";
-import { authenticateTokenUserRole } from "../middleware/authMiddleware.mts";
-import { authorizeRole } from "../middleware/authorizeMiddleware.mts";
+import {
+  authorizeRole,
+  authenticateTokenUserAuth,
+} from "../middleware/authMiddleware.mts";
 const router = Router();
 
 router.post(
   "/",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Seller]),
   multerMiddleware,
   uploadImageS3,
@@ -27,15 +30,16 @@ router.post(
 );
 router.get("/", getAllListings);
 router.get("/:id", getListingById);
+router.get("/seller/:id", getListingBySellerId);
 router.put(
   "/:id",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Admin]),
   updateListing
 );
 router.delete(
   "/:id",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Admin]),
   deleteListing
 ); // Admin only
@@ -51,14 +55,14 @@ router.delete(
 //   }
 router.put(
   "/shuffle-cover",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Seller]),
   multerMiddleware,
   shuffleImages
 );
 router.post(
   "/upload-more",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Seller, UserRolesEnum.Arbiter]),
   multerMiddleware,
   uploadImageS3,
@@ -74,7 +78,7 @@ router.post(
 //   }
 router.delete(
   "/images",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([
     UserRolesEnum.Seller,
     UserRolesEnum.Admin,

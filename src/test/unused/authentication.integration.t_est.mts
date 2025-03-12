@@ -30,18 +30,6 @@ describe("Authentication Controller Integration Tests", () => {
     // Clear Redis and database before each test
     const redisClient = await getRedisClient();
     await redisClient.flushAll();
-    await db
-      .deleteFrom("og.userAccounts")
-      .where("userIdFk", "=", userId)
-      .execute();
-    await db
-      .deleteFrom("og.userDetails")
-      .where("userIdFk", "=", userIdFk)
-      .execute();
-    await db
-      .deleteFrom("og.authStatus")
-      .where("userIdFk", "=", userIdFk)
-      .execute();
 
     // Setup test user in database
     const insertResult = await db
@@ -145,10 +133,10 @@ describe("Authentication Controller Integration Tests", () => {
       .executeTakeFirst();
     expect(ogAuthStatus?.verifiedPhone).toBe(true);
   });
-  it('should verify stripe successfully via API', async () => {
+  it("should verify stripe successfully via API", async () => {
     // Call the /verify-stripe API endpoint
     const response = await request(app)
-      .post('/api/auth/verify-stripe')
+      .post("/api/auth/verify-stripe")
       .send({ userId })
       .expect(200);
 
@@ -157,21 +145,11 @@ describe("Authentication Controller Integration Tests", () => {
 
     // Verify that the session is stored in Redis
     const redisClient = await getRedisClient();
-    const redisValue = await redisClient.get(`stripe-session:${stripeSessionId}`);
+    const redisValue = await redisClient.get(
+      `stripe-session:${stripeSessionId}`
+    );
     expect(redisValue).toBe(userId);
 
-    // Mock Stripe webhook event
-    const mockStripeWebhookEvent = {
-        id: 'evt_test_webhook',
-        type: 'identity.verification_session.verified',
-        data: {
-            object: {
-                id: stripeSessionId,
-            },
-        },
-    };
-    
-  it("should verify stripe successfully", async () => {
     // Mock Stripe webhook event
     const mockStripeWebhookEvent = {
       id: "evt_test_webhook",
@@ -183,61 +161,74 @@ describe("Authentication Controller Integration Tests", () => {
       },
     };
 
-    // Store stripe session in redis
-    const redisClient = await getRedisClient();
-    await redisClient.set(`stripe-session:${stripeSessionId}`, userId);
+    it("should verify stripe successfully", async () => {
+      // Mock Stripe webhook event
+      const mockStripeWebhookEvent = {
+        id: "evt_test_webhook",
+        type: "identity.verification_session.verified",
+        data: {
+          object: {
+            id: stripeSessionId,
+          },
+        },
+      };
 
-    // Verify stripe
-    const response = await request(app)
-      .post("/api/auth/stripe-webhook")
-      .send(mockStripeWebhookEvent)
-      .expect(200);
+      // Store stripe session in redis
+      const redisClient = await getRedisClient();
+      await redisClient.set(`stripe-session:${stripeSessionId}`, userId);
 
-    expect(response.body.received).toBe(true);
+      // Verify stripe
+      const response = await request(app)
+        .post("/api/auth/stripe-webhook")
+        .send(mockStripeWebhookEvent)
+        .expect(200);
 
-    // Verify database and Cognito updates
-    const userAccount = await db
-      .selectFrom("og.userAccounts")
-      .selectAll()
-      .where("userIdFk", "=", userId)
-      .executeTakeFirst();
-    expect(userAccount?.status).toBe(UserVerifiedStatus.StripeVerified);
+      expect(response.body.received).toBe(true);
 
-    const cognitoUser = await cognito
-      .adminGetUser({
-        UserPoolId: process.env.COGNITO_USER_POOL_ID as string,
-        Username: cognitoUsername,
-      })
-      .promise();
+      // Verify database and Cognito updates
+      const userAccount = await db
+        .selectFrom("og.userAccounts")
+        .selectAll()
+        .where("userIdFk", "=", userId)
+        .executeTakeFirst();
+      expect(userAccount?.status).toBe(UserVerifiedStatus.StripeVerified);
 
-    const stripeVerifiedAttribute = cognitoUser.UserAttributes?.find(
-      (attr) => attr.Name === "custom:stripe_verified"
-    );
-    expect(stripeVerifiedAttribute?.Value).toBe("true");
+      const cognitoUser = await cognito
+        .adminGetUser({
+          UserPoolId: process.env.COGNITO_USER_POOL_ID as string,
+          Username: cognitoUsername,
+        })
+        .promise();
 
-    const ogAuthStatus = await db
-      .selectFrom("og.authStatus")
-      .selectAll()
-      .where("userIdFk", "=", userIdFk)
-      .executeTakeFirst();
-    expect(ogAuthStatus?.verifiedUserId).toBe(true);
-  });
+      const stripeVerifiedAttribute = cognitoUser.UserAttributes?.find(
+        (attr) => attr.Name === "custom:stripe_verified"
+      );
+      expect(stripeVerifiedAttribute?.Value).toBe("true");
 
-  it("should return the correct UserVerifiedStatus from OgAuthStatus", async () => {
-    // Setup test data
-    await db
-      .updateTable("og.authStatus")
-      .set({ verifiedPhone: true, verifiedUserId: true })
-      .where("userIdFk", "=", userIdFk)
-      .execute();
+      const ogAuthStatus = await db
+        .selectFrom("og.authStatus")
+        .selectAll()
+        .where("userIdFk", "=", userIdFk)
+        .executeTakeFirst();
+      expect(ogAuthStatus?.verifiedUserId).toBe(true);
+    });
 
-    // Get status
-    const response = await request(app)
-      .get(`/api/auth/get-status?userId=${userId}`)
-      .expect(200);
+    it("should return the correct UserVerifiedStatus from OgAuthStatus", async () => {
+      // Setup test data
+      await db
+        .updateTable("og.authStatus")
+        .set({ verifiedPhone: true, verifiedUserId: true })
+        .where("userIdFk", "=", userIdFk)
+        .execute();
 
-    expect(response.body.status).toBe(
-      UserVerifiedStatus.PhoneAndStripeVerified
-    );
+      // Get status
+      const response = await request(app)
+        .get(`/api/auth/get-status?userId=${userId}`)
+        .expect(200);
+
+      expect(response.body.status).toBe(
+        UserVerifiedStatus.PhoneAndStripeVerified
+      );
+    });
   });
 });

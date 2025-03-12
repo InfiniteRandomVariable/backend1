@@ -35,6 +35,34 @@ export const arbiterProfileSchema = z.object({
   lastLoggedIn: z.date().optional().nullable(), // Timestamp, Optional, Nullable (Zod `date()` type for Timestamp/Date)
   chargeFee: z.number().optional().nullable(), // integer, Optional, Nullable (Assuming it represents a numerical fee)
 });
+export const updateAuthStatusSchema = z.object({
+  isSeller: z.boolean().optional(),
+  isArbiter: z.boolean().optional(),
+  isStaffAdmin: z.boolean().optional(),
+  userStatus: z.number().optional(), // {{ edit_1 }}
+  verifiedEmail: z.boolean().optional(), // {{ edit_1 }}
+  verifiedPhone: z.boolean().optional(), // {{ edit_1 }}
+  verifiedUserId: z.boolean().optional(), // {{ edit_1 }}
+});
+export const ReviewPurchaseOfferRequestSchema = z.object({
+  status: z.number().positive().int({
+    message: "Enum status",
+  }),
+  selectedArbiterIds: z
+    .array(z.number().int().positive(), {
+      // Array of positive integers
+      required_error: "Arbiter IDs are required when accepting an offer",
+      invalid_type_error: "Arbiter IDs must be an array of numbers",
+    })
+    .min(3, "Please select exactly 3 arbiters")
+    .max(3, "Please select exactly 3 arbiters")
+    .optional(), // Optional because not needed for 'reject' action
+});
+
+export type ReviewPurchaseOfferRequest = z.infer<
+  typeof ReviewPurchaseOfferRequestSchema
+>;
+
 export const createPurchaseOfferSchema = z.object({
   phonePostIdFk: z.number().positive().int({
     message: "Phone Post ID is required and must be a positive integer.",
@@ -63,3 +91,29 @@ export const createPurchaseOfferSchema = z.object({
 export type CreatePurchaseOfferRequest = z.infer<
   typeof createPurchaseOfferSchema
 >;
+export const makePurchaseOfferSchema = z.object({
+  id: z.number().int().positive().optional(), // Assuming 'id' is auto-generated and optional on creation
+  createdAt: z.date().optional(), // Assuming 'createdAt' is auto-generated timestamp
+  phoneIdFk: z
+    .number()
+    .int()
+    .positive({ message: "Phone ID (Listing ID) must be a positive integer" }),
+  buyerUserIdFk: z.number().int().positive(),
+  arbiter1UserIdFk: z.number().int().positive().nullable(),
+  arbiter2UserIdFk: z.number().int().positive().nullable(),
+  arbiter3UserIdFk: z.number().int().positive().nullable(),
+  arbiter4UserIdFk: z.number().int().positive().nullable(),
+  arbiter5UserIdFk: z.number().int().positive().nullable(),
+  arbiter6UserIdFk: z.number().int().positive().nullable(),
+  status: z.number().int().nullable(), // Using number for status as per your interface
+  sellerDidRead: z.boolean().nullable(),
+  acceptedArbiterPositions: z.number().int().nullable(),
+  acceptedArbiterStatus: z.number().int().nullable(),
+  productIdFk: z.number().int().positive().nullable(), // Assuming productIdFk is positive integer if present
+
+  // Note: 'offerPrice' and 'messageToSeller' are still *not* included as per previous instructions.
+  // If 'offerPrice' or 'messageToSeller' *are* needed, you must add them here with appropriate Zod types.
+});
+
+export type MakePurchaseOfferPayload = z.infer<typeof makePurchaseOfferSchema>; // Type name kept as MakePurchaseOfferPayload for consistency
+export type OgPurchaseOffersType = MakePurchaseOfferPayload; // Re-exporting type with original name for potential broader use.

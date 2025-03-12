@@ -3,7 +3,7 @@
 # Database connection details
 DB_USER="postgres"
 DB_PASS="password" # Replace with your actual password
-DB_NAME="og"
+DB_NAME="postgres"
 SCHEMA_NAME="og"
 SQL_FILE="/Users/kevinlau/Documents/Dev/MyMarketPlaceGuard/database/my_market_place_guard.sql"
 

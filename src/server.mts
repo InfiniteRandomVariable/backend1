@@ -5,6 +5,8 @@ import phonesRouter from "./api/phones.mjs"; // Ensure correct extension and pat
 import usersRouter from "./api/users.mjs";
 import listingsRouter from "./api/listings.mts";
 import arbiterRouter from "./api/arbiter.mts";
+import adminRouter from "./api/admin.mjs";
+import tradeRouter from "./api/trades.mts";
 import { Request, Response } from "express";
 dotenv.config();
 
@@ -46,6 +48,9 @@ app.use("/api/users", usersRouter); // Use users router
 app.use("/api/phones", phonesRouter);
 app.use("/api/listings", listingsRouter);
 app.use("/api/arbiter", arbiterRouter);
+app.use("/api/trades", tradeRouter);
+
+app.use("/api/admin", adminRouter);
 app
   .listen(port, () => {
     console.log(`Backend server is running on port ${port}`);

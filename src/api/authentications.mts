@@ -13,7 +13,9 @@ import {
 
 //import { verifyPhoneSchema, verifyCodeSchema } from '../api/user.zod.mts';
 import { validateRequest } from "../middleware/validateRequest.mts";
+
 import bodyParser from "body-parser";
+// import bodyParser from 'body-parser'; // Consider using this if the above doesn't work and you are using commonjs modules
 const router = Router();
 
 router.post("/verify-phone", validateRequest(verifyPhoneSchema), verifyPhone);

@@ -4,6 +4,7 @@ import { CreatePurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 import { db } from "../db/database.mts";
 import { sendSMS } from "../utils/sns.mts"; // Import sendSMS utility
 import { getUserDetailsList } from "../utils/user.mts";
+import { ReviewPurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 
 import { PurchaseOfferStatus, ProductStatus } from "../db/types.mjs";
 
@@ -16,11 +17,13 @@ export const handleReviewPurchaseOffer = async (
   req: Request,
   res: Response
 ) => {
+  console.log("handleReviewPurchaseOffer 20");
   let action = "";
-  let userIds: number[] = [];
+  //let userIds: number[] = [];
 
   try {
     if (!req.user || !req.user.id) {
+      console.log("handleReviewPurchaseOffer 26");
       return res
         .status(401)
         .json({ message: "Unauthorized: Missing user information." });
@@ -29,10 +32,13 @@ export const handleReviewPurchaseOffer = async (
     const purchaseOfferId = parseInt(req.params.purchaseOfferId, 10); // Get purchaseOfferId from URL params
 
     if (isNaN(purchaseOfferId) || purchaseOfferId <= 0) {
+      console.log("handleReviewPurchaseOffer 35 ", req.params.purchaseOfferId);
       return res.status(400).json({ message: "Invalid purchaseOfferId." });
     }
 
-    const reviewData: CreatePurchaseOfferRequest = req.body; // Already validated by middleware
+    const reviewData: ReviewPurchaseOfferRequest = req.body; // Already validated by middleware
+    console.log("reviewData");
+    console.log(reviewData);
 
     // 1. Fetch Purchase Offer and Related Phone Listing (og.purchaseOffers, og.phones)
     const purchaseOffer = await db
@@ -95,7 +101,7 @@ export const handleReviewPurchaseOffer = async (
     // 4. Handle Seller Action ("accept" or "reject")
     if (reviewData.status === PurchaseOfferStatus.AcceptedBySeller) {
       // 4.a. Accept Offer Logic
-      const selectedArbiterIds = reviewData.arbiterUserIds;
+      const selectedArbiterIds = reviewData.selectedArbiterIds;
 
       // 4.a.i. Verify Seller Selected 3 Arbiters
       if (!selectedArbiterIds || selectedArbiterIds.length !== 3) {

@@ -2,8 +2,10 @@
 import { Router } from "express";
 //import { authorize } from "../middleware/authorizeMiddleware.mts";
 import { UserRolesEnum } from "../db/types.mts";
-import { authenticateTokenUserRole } from "../middleware/authMiddleware.mts";
-import { authorizeRole } from "../middleware/authorizeMiddleware.mts";
+import {
+  authorizeRole,
+  authenticateTokenUserAuth,
+} from "../middleware/authMiddleware.mts";
 import {
   registerUser,
   loginUser,
@@ -15,7 +17,7 @@ const router = Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.get("/profile", authenticateTokenUserRole, getUserProfile);
+router.get("/profile", authenticateTokenUserAuth, getUserProfile);
 
 // router.get(
 //   "/profile2",
@@ -30,13 +32,13 @@ router.get("/profile", authenticateTokenUserRole, getUserProfile);
 //router.get("/all", authenticateTokenUserRole, authorizeRole([4]), getAllUsers);
 router.delete(
   "/:id",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Admin]),
   deleteUser
 );
 router.get(
   "/all",
-  authenticateTokenUserRole,
+  authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Admin]),
   getAllUsers
 );

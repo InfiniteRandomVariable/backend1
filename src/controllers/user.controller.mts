@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import z from "zod";
 import { db } from "../db/database.mts";
-import { UserRolesEnum } from "../db/types.mts";
+import { UserRolesEnum, UserStatus } from "../db/types.mts";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
@@ -34,12 +34,12 @@ export const hashUserSalt = async function () {
   const firstTenLetters = hashUserSalt.substring(beginning, end);
   return firstTenLetters;
 };
-async function hashUserPassword(password: string) {
+export const hashUserPassword = async function (password: string) {
   const saltRounds = 13; // Adjust rounds for performance vs. security
 
   const hashUserSalt = await bcrypt.hash(password, saltRounds);
   return hashUserSalt;
-}
+};
 
 const computeUserSecret = (userSecret: string) => {
   if (!MASTER_SECRET) {
@@ -61,14 +61,14 @@ export const jwt_sign = (
   user_id: number,
   userName: string | void,
   userSecretSalt: string = "",
-  userSecretKey: string = MASTER_SECRET as string
+  masterSecretKey: string = MASTER_SECRET as string
 ) => {
   //const finalSecret = computeUserSecret(userSecretSalt);
   console.log("userSecretSalt");
   console.log(userSecretSalt);
   const token = jwt.sign(
     { id: user_id, userName: userName, salt: userSecretSalt },
-    userSecretKey,
+    masterSecretKey,
     {
       expiresIn: JWT_EXPIRES_IN,
       algorithm: "HS256",
@@ -84,20 +84,22 @@ export const getTokenByUserId = async function getTokenByUserId(
   const tokens = await db
     .selectFrom("og.token")
     .selectAll() // Select all columns from og.token table
-    .where("userIdFk", "=", userId) // Filter by user_id_fk
-    .execute();
+    .where("userIdFk", "=", userId)
+    .executeTakeFirst(); // Filter by user_id_fk
 
   return tokens; // Returns an array of token objects (or empty array if no tokens found)
 };
 
 export const jwt_verify = (
   token: string = "",
-  userSecretKey: string = MASTER_SECRET as string
+  masterSecretKey: string = MASTER_SECRET as string
 ): Promise<jwt.JwtPayload> => {
   // {{ edit_1 }}
+  console.log("#############masterSecretKey");
+  console.log(masterSecretKey);
   return new Promise((resolve, reject) => {
     // {{ edit_2 }}
-    jwt.verify(token, userSecretKey, (err, decoded) => {
+    jwt.verify(token, masterSecretKey, (err, decoded) => {
       // {{ edit_3 }}
       if (err) {
         console.error("JWT verification failed:", err.message);
@@ -222,10 +224,24 @@ export const registerUser = async (req: Request, res: Response) => {
       })
       .execute();
 
+    await db
+      .insertInto("og.authStatus")
+      .values({
+        userIdFk: insertedUser.id,
+        verifiedEmail: false, // {{ edit_1 }}
+        verifiedPhone: false, // {{ edit_1 }}
+        verifiedUserId: false, // {{ edit_1 }}
+        isArbiter: false,
+        isSeller: false,
+        isStaffAdmin: false,
+        userStatus: UserStatus.Pending,
+      })
+      .execute();
+
     const token = jwt_sign(insertedUser.id, uName, hashedUserSalt);
     await upsertTokenByUserRole(
       insertedUser.id,
-      UserRolesEnum.BuyerSeller,
+      UserRolesEnum.Buyer,
       password,
       token
     );
@@ -274,12 +290,16 @@ export const upsertTokenByUserRole = async function (
   token: string
 ) {
   const hashToken = token.substring(0, 8);
-  let userHash = "";
+  let buyerHash = "";
+  let sellerHash = "";
   let arbiterHash = "";
   let staffHash = "";
   let adminHash = "";
-  if (userRole === UserRolesEnum.BuyerSeller) {
-    userHash = hashToken;
+
+  if (userRole === UserRolesEnum.Buyer) {
+    buyerHash = hashToken;
+  } else if (userRole === UserRolesEnum.Seller) {
+    sellerHash = hashToken;
   } else if (userRole === UserRolesEnum.Arbiter) {
     arbiterHash = hashToken;
   } else if (
@@ -295,12 +315,13 @@ export const upsertTokenByUserRole = async function (
     //password must include "#_#_"
     adminHash = hashToken;
   } else {
-    throw new Error("Invalid user role");
+    throw new Error(`Invalid user role: ${userRole}`);
   }
 
   await upsertToken({
     userIdFk: userId,
-    userHash: userHash,
+    buyerHash: buyerHash,
+    sellerHash: sellerHash,
     arbiterHash: arbiterHash,
     staffHash: staffHash,
     adminHash: adminHash,

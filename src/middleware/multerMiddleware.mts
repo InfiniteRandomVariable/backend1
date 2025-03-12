@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   deleteLocalFiles,
+  isDevEnviroment,
   deleteAllLocalImages,
 } from "../utils/commonUtil.mjs";
 import { fileURLToPath } from "url";
@@ -55,8 +56,13 @@ export const multerMiddleware = (
   return upload.array("images[]", maxAllowUploadImages)(req, res, (err) => {
     console.log("req.files");
     console.log(req.files);
-    if (!req.files || !Array.isArray(req.files))
+    if (!req.files || !Array.isArray(req.files)) {
+      if (isDevEnviroment()) {
+        return next();
+      }
       return res.json({ error: "invalidFiletype" });
+    }
+    //
     if (err) {
       console.log("line 51 " + err.message);
       console.log(err);

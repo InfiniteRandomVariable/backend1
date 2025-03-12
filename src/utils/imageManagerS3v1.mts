@@ -4,7 +4,11 @@ import { Request, Response, NextFunction } from "express";
 //setup client-s3 credentials https://stackoverflow.com/questions/68264237/how-to-set-credentials-in-aws-sdk-v3-javascript
 import { Upload } from "@aws-sdk/lib-storage";
 import { pipeline } from "stream";
-import { deleteLocalFiles, deleteAllLocalImages } from "./commonUtil.mjs";
+import {
+  deleteLocalFiles,
+  deleteAllLocalImages,
+  isDevEnviroment,
+} from "./commonUtil.mjs";
 import util from "util";
 import fs from "fs";
 import { v4 as uuid } from "uuid";
@@ -69,6 +73,13 @@ export const uploadImageS3 = async (
 ) => {
   console.log("post images 1");
   const files = req.files;
+  if (!files || !files.length) {
+    console.log("post images 2");
+    if (isDevEnviroment()) {
+      return next();
+    }
+    return res.status(500).json({ error: "files is empty" });
+  }
   const userId: number = typeof req.userId === "number" ? req.userId : 1003;
 
   // console.log("files.length " + files.length);

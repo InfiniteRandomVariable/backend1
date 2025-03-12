@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import z from "zod";
 import { db } from "../db/database.mts";
 import { deleteImagesFromS3AndDB } from "../utils/imageManagerS3v1.mjs";
+import { isDevEnviroment } from "../utils/commonUtil.mts";
 //TODO requests
 //1 function
 //Delete the images based on the client's provided URL strings on AWS S3
@@ -80,13 +81,22 @@ export const phoneDetailsSchema = z.object({
 });
 export const createListing = async (req: Request, res: Response) => {
   try {
+    console.log("createListing 84");
     const files = req.payload;
-    if (!Array.isArray(files) && files.length < 1) {
+
+    console.log(req.payload);
+    console.log("createListing 86");
+    if (!Array.isArray(files) && !files && isDevEnviroment() === false) {
       return res.status(500).json({ message: "Failed to create listing 20" });
     }
-    const coverPhotoUrl = files.shift(); //remove the first element and return the first element
 
-    const listingData = listingSchema.parse(req.body);
+    console.log("createListing 94");
+    const coverPhotoUrl = files && files.shift ? files.shift() : null; //remove the first element and return the first element
+
+    const listingData = listingSchema.parse({
+      ...req.body,
+      userIdFk: req.user.id,
+    });
     const newListing = await db
       .insertInto("og.phones")
       .values({
@@ -104,9 +114,12 @@ export const createListing = async (req: Request, res: Response) => {
     if (!newListing) {
       return res.status(500).json({ message: "Failed to create listing" });
     }
-    const newfilesName: string[] = files.filter((fileName: any) => {
-      return typeof fileName === "string";
-    });
+    const newfilesName: string[] =
+      files && files.filter
+        ? files.filter((fileName: any) => {
+            return typeof fileName === "string";
+          })
+        : [];
     const _newNames = newfilesName.length === 0 ? null : newfilesName;
 
     await db
@@ -127,7 +140,7 @@ export const createListing = async (req: Request, res: Response) => {
         photoUrls: _newNames,
         replacements: listingData.replacements,
         screen: listingData.screen,
-        shphoneFrom31662: listingData.shphoneFrom31662,
+        shipFrom: listingData.shphoneFrom31662,
         storage: listingData.storage,
         wifi: listingData.wifi,
       })
@@ -189,6 +202,35 @@ export const getAllListings = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error getting listings:", error);
     res.status(500).json({ message: "Error getting listings" });
+  }
+};
+
+export const getListingBySellerId = async (req: Request, res: Response) => {
+  // {{ edit_1 }}
+  try {
+    const sellerId = parseInt(req.params.sellerId); // {{ edit_1 }}
+    if (isNaN(sellerId)) {
+      // {{ edit_1 }}
+      return res.status(400).json({ message: "Invalid seller ID" }); // {{ edit_1 }}
+    }
+
+    const listings = await db // {{ edit_1 }}
+      .selectFrom("og.phones") // {{ edit_1 }}
+      .selectAll() // {{ edit_1 }}
+      .where("userIdFk", "=", sellerId) // {{ edit_1 }}
+      .execute(); // {{ edit_1 }}
+
+    if (!listings || listings.length === 0) {
+      // {{ edit_1 }}
+      return res
+        .status(404)
+        .json({ message: "Listings not found for this seller ID" }); // {{ edit_1 }}
+    }
+
+    res.json(listings); // {{ edit_1 }}
+  } catch (error) {
+    console.error("Error getting listings by seller ID:", error); // {{ edit_1 }}
+    res.status(500).json({ message: "Error getting listings by seller ID" }); // {{ edit_1 }}
   }
 };
 
