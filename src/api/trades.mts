@@ -34,7 +34,7 @@ router.post(
   handleReviewPurchaseOffer
 );
 ///api/offers/purchaseoffers/current?status=2
-router.post(
+router.get(
   "/purchaseoffers/current",
   authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Seller, UserRolesEnum.Buyer]),

@@ -10,6 +10,11 @@ import { UserRoles } from "../db/types.mts";
 const router = express.Router();
 
 // PUT /api/admin/users/:userId/auth-status
-router.put("/users/:userId/auth-status", updateUserAuthStatusByAdmin);
+// router.put("/users/:userId/auth-status", updateUserAuthStatusByAdmin);
+router.put(
+  "/users/auth-status",
+  authenticateTokenUserAuth,
+  updateUserAuthStatusByAdmin
+);
 
 export default router;

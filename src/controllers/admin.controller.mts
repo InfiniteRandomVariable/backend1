@@ -12,11 +12,28 @@ export const updateUserAuthStatusByAdmin = async (
   res: Response
 ) => {
   try {
-    const userId = parseInt(req.params.userId);
+    console.log("authorizeRole");
+    const user = req.user;
+    console.log("user", user);
 
-    if (isNaN(userId) || !isDevEnviroment()) {
-      return res.status(400).json({ message: "Invalid userId provided." });
+    //Conside to add user salt matchint the one provided by the client side to the server side.
+    //let didMatchUserSalt = false;
+
+    if (!user || !user.id || !user.jwtstr || typeof user !== "object") {
+      // Assuming 'role' is in your JWT payload
+      return res
+        .status(403)
+        .json({ message: "Authorization failed: User role not found." }); // Or handle this as 401 if role is essential for auth
     }
+
+    //    const userId = parseInt(req.params.userId);
+    //  const token = parseInt(req.params.token);
+
+    // if (isNaN(userId) || !isDevEnviroment() || !token) {
+    //   return res.status(400).json({ message: "Invalid userId provided." });
+    // }
+    // if (isNaN(userId) && token) {
+    // }
 
     const authStatusData: AuthStatusPayload = updateAuthStatusSchema.parse(
       req.body
@@ -57,14 +74,14 @@ export const updateUserAuthStatusByAdmin = async (
     }
 
     const updatedAuthStatus = await updateUserAuthStatusInDatabase(
-      userId,
+      user.id,
       authStatusData
     ); // Call the reusable function
 
     if (!updatedAuthStatus) {
       return res
         .status(404)
-        .json({ message: `Auth Status not found for userId: ${userId}` });
+        .json({ message: `Auth Status not found for userId: ${user.id}` });
     }
 
     res.status(200).json(updatedAuthStatus);

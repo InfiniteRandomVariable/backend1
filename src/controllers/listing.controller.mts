@@ -4,6 +4,8 @@ import z from "zod";
 import { db } from "../db/database.mts";
 import { deleteImagesFromS3AndDB } from "../utils/imageManagerS3v1.mjs";
 import { isDevEnviroment } from "../utils/commonUtil.mts";
+import { ProductCondition } from "../db/types.mts";
+import { updateLastSeen } from "../db/queries/user.queries.mts";
 //TODO requests
 //1 function
 //Delete the images based on the client's provided URL strings on AWS S3
@@ -30,7 +32,7 @@ const listingSchema = z.object({
   cam: z.number().nullable(),
   charger: z.boolean().nullable(),
   color: z.string().nullable(),
-  condition: z.string().nullable(),
+  condition: z.nativeEnum(ProductCondition).nullable(),
   cord: z.boolean().nullable(),
   damage: z.string().nullable(),
   frontCam: z.number().nullable(),
@@ -44,7 +46,7 @@ const listingSchema = z.object({
 
 export const ogPhonesSchema = z.object({
   carrier: z.number().int(),
-  condition: z.number().int(),
+  condition: z.nativeEnum(ProductCondition).nullable(),
   coverPhotoUrl: z.string().nullable(),
   createdDate: z.date(),
   currency: z.string().nullable(),
@@ -67,7 +69,7 @@ export const phoneDetailsSchema = z.object({
   cam: z.number().nullable(),
   charger: z.boolean().nullable(),
   color: z.string().nullable(),
-  condition: z.string().nullable(),
+  condition: z.nativeEnum(ProductCondition).nullable(),
   cord: z.boolean().nullable(),
   damage: z.string().nullable(),
   freeShipping: z.boolean().nullable(),
@@ -133,7 +135,7 @@ export const createListing = async (req: Request, res: Response) => {
         cam: listingData.cam,
         charger: listingData.charger,
         color: listingData.color,
-        condition: listingData.condition,
+        condition: listingData.condition ? String(listingData.condition) : null,
         cord: listingData.cord,
         damage: listingData.damage,
         frontCam: listingData.frontCam,
@@ -208,6 +210,19 @@ export const getAllListings = async (req: Request, res: Response) => {
 export const getListingBySellerId = async (req: Request, res: Response) => {
   // {{ edit_1 }}
   try {
+    const user = req.user;
+    console.log("user", user);
+
+    //Conside to add user salt matchint the one provided by the client side to the server side.
+    //let didMatchUserSalt = false;
+
+    if (!user || !user.id || !user.jwtstr || typeof user !== "object") {
+      // Assuming 'role' is in your JWT payload
+      return res
+        .status(403)
+        .json({ message: "Authorization failed: User role not found." }); // Or handle this as 401 if role is essential for auth
+    }
+
     const sellerId = parseInt(req.params.sellerId); // {{ edit_1 }}
     if (isNaN(sellerId)) {
       // {{ edit_1 }}
@@ -219,6 +234,8 @@ export const getListingBySellerId = async (req: Request, res: Response) => {
       .selectAll() // {{ edit_1 }}
       .where("userIdFk", "=", sellerId) // {{ edit_1 }}
       .execute(); // {{ edit_1 }}
+
+    await updateLastSeen(user.id);
 
     if (!listings || listings.length === 0) {
       // {{ edit_1 }}

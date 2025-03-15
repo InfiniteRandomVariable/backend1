@@ -30,17 +30,25 @@ router.post(
 );
 router.get("/", getAllListings);
 router.get("/:id", getListingById);
-router.get("/seller/:id", getListingBySellerId);
+router.get("/seller/:sellerId", getListingBySellerId);
 router.put(
   "/:id",
   authenticateTokenUserAuth,
-  authorizeRole([UserRolesEnum.Admin]),
+  authorizeRole([
+    UserRolesEnum.Admin,
+    UserRolesEnum.Seller,
+    UserRolesEnum.Staff,
+  ]),
   updateListing
 );
 router.delete(
   "/:id",
   authenticateTokenUserAuth,
-  authorizeRole([UserRolesEnum.Admin]),
+  authorizeRole([
+    UserRolesEnum.Admin,
+    UserRolesEnum.Seller,
+    UserRolesEnum.Staff,
+  ]),
   deleteListing
 ); // Admin only
 
@@ -61,7 +69,7 @@ router.put(
   shuffleImages
 );
 router.post(
-  "/upload-more",
+  "/images",
   authenticateTokenUserAuth,
   authorizeRole([UserRolesEnum.Seller, UserRolesEnum.Arbiter]),
   multerMiddleware,

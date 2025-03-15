@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { arbiterProfileSchema } from "../db/zod/types.zod.mjs";
 import { db } from "../db/database.mts";
 import { UserStatus } from "../db/types.mjs";
+import { getArbitersWithPagination } from "../db/queries/arbiter.queries.mjs";
 declare global {
   // {{ edit_1 }}
   namespace Express {
@@ -13,6 +14,29 @@ declare global {
     } // {{ edit_1 }}
   } // {{ edit_1 }}
 } // {{ edit_1 }}
+
+export const getPaginatedArbiters = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 20; // Default to 20 per page
+
+    if (isNaN(page) || page < 1 || isNaN(pageSize) || pageSize < 1) {
+      return res
+        .status(400)
+        .json({ message: "Invalid page or pageSize parameters." });
+    }
+
+    const arbiterUserIds = await getArbitersWithPagination(page, pageSize);
+
+    res.status(200).json(arbiterUserIds);
+  } catch (error: any) {
+    console.error("Error fetching paginated arbiters:", error);
+    res.status(500).json({
+      message: "Failed to fetch paginated arbiters",
+      error: error.message,
+    });
+  }
+};
 
 export const handleCreateArbiterProfile = async (
   req: Request,

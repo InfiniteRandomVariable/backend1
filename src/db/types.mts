@@ -197,6 +197,18 @@ export interface ListingAndSellerInfo {
   sellerPhone: string | null;
   sellerSnsTopicArn: string | null;
 }
+
+export enum ProductCondition {
+  New = 0, // Brand new, unused, in original packaging with all accessories.
+  LikeNew = 1, // Used, but in perfect condition with no signs of wear. May or may not include original packaging.
+  Excellent = 2, // Used, with very minor signs of wear (e.g., tiny scratches not easily noticeable). Fully functional.
+  Good = 3, // Used, with noticeable but minor signs of wear (e.g., light scratches, minor scuffs). Fully functional.
+  Fair = 4, // Used, with moderate signs of wear (e.g., noticeable scratches, scuffs, small dents). Fully functional.
+  Poor = 5, // Used, with significant signs of wear (e.g., deep scratches, dents, cracks). Functionality might be limited or fully functional.
+  Damaged = 6, // Significant damage that may affect functionality (e.g., cracked screen, broken buttons). Specific issues should be described.
+  ForPartsOnly = 7, // Not fully functional or has significant issues. Intended for repair or salvaging parts. Specific issues should be described.
+  Refurbished = 8, // Previously used and returned, but has been inspected, cleaned, and repaired to full working order by the manufacturer or a certified technician. May have minor cosmetic imperfections.
+}
 export enum NotificationType {
   Offers = "offers",
   Messages = "messages",

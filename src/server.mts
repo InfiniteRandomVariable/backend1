@@ -1,3 +1,4 @@
+//file source src/server.mts
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -47,7 +48,7 @@ app.get("/test", testMiddleware, testRouteHandler);
 app.use("/api/users", usersRouter); // Use users router
 app.use("/api/phones", phonesRouter);
 app.use("/api/listings", listingsRouter);
-app.use("/api/arbiter", arbiterRouter);
+app.use("/api/arbiters", arbiterRouter);
 app.use("/api/trades", tradeRouter);
 
 app.use("/api/admin", adminRouter);

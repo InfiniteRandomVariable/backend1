@@ -105,11 +105,11 @@ export const makePurchaseOfferSchema = z.object({
   arbiter4UserIdFk: z.number().int().positive().nullable(),
   arbiter5UserIdFk: z.number().int().positive().nullable(),
   arbiter6UserIdFk: z.number().int().positive().nullable(),
-  status: z.number().int().nullable(), // Using number for status as per your interface
-  sellerDidRead: z.boolean().nullable(),
-  acceptedArbiterPositions: z.number().int().nullable(),
-  acceptedArbiterStatus: z.number().int().nullable(),
-  productIdFk: z.number().int().positive().nullable(), // Assuming productIdFk is positive integer if present
+  status: z.number().int().nullable().optional(), // Using number for status as per your interface
+  sellerDidRead: z.boolean().nullable().optional(),
+  acceptedArbiterPositions: z.number().int().nullable().optional(),
+  acceptedArbiterStatus: z.number().int().nullable().optional(),
+  productIdFk: z.number().int().positive().nullable().optional(), // Assuming productIdFk is positive integer if present
 
   // Note: 'offerPrice' and 'messageToSeller' are still *not* included as per previous instructions.
   // If 'offerPrice' or 'messageToSeller' *are* needed, you must add them here with appropriate Zod types.

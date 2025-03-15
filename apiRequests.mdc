@@ -1,0 +1,244 @@
+---
+description: 
+globs: 
+---
+## Register
+{
+    "uName": "BuyerTestUser1",  // Choose a unique username
+    "email": "buyer1@example.com", // Choose a unique email
+    "password": "TestPassword123" // Choose a password (at least 8 characters)
+}
+
+jwt token
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMSwidXNlck5hbWUiOiJCdXllclRlc3RVc2VyMSIsInNhbHQiOiJjMzlmMGYyZTciLCJpYXQiOjE3NDE4NjAwMDQsImV4cCI6MTc0NzA0NDAwNCwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.5wpnBrSrLr0IcTQudt6d6PdAz2u4vNYS4mPpdTVvii4
+
+
+
+## Login
+{
+    "uName": "BuyerArbiter2",  // Choose a unique username
+    "email": "arbiter2@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
+}
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMiwidXNlck5hbWUiOiJCdXllckFyYml0ZXIxIiwic2FsdCI6ImUyZDZmMDA5MCIsImlhdCI6MTc0MTg2ODM1MCwiZXhwIjoxNzQ3MDUyMzUwLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.6na6aKSHxBC2PE16meIpR00wSFu7PnIodwFDd-Hw0Tc
+
+## Listing phone
+{
+    "model": 12345,
+    "price": 500,
+    "status": 1,
+    "currency": "USD",
+    "battery": 90,
+    "bluetooth": 5,
+    "body": 1,
+    "buttons": 1,
+    "cam": 8,
+    "charger": true,
+    "color": "Space Gray",
+    "condition": "Used - Good",
+    "cord": false,
+    "damage": "Minor scratches on screen",
+    "frontCam": 5,
+    "photoUrls": [],  // <----- ADD THIS LINE: Include photoUrls as an empty array
+    "replacements": "None",
+    "screen": 6,
+    "shphoneFrom31662": "US",
+    "storage": 128,
+    "wifi": 5
+}
+
+
+## Update product listing
+http://localhost:3002/api/listings/212
+{
+    "price": 575,   // Updating the price
+    "status": 2,    // Updating the status (e.g., to 'Normal' or another relevant status)
+    "condition": 1 // Updating the condition
+}
+
+## Delete product listing
+http://localhost:3002/api/listings/212
+
+
+# Update Arbiter Profile
+http://localhost:3002/api/arbiter/profiles
+{
+    "arbiterUserIdFk": 123,  // Replace with the actual ID of the user making the request (though the controller uses req.user.id)
+    "arbiterName": "John Doe",
+    "intro": "Experienced arbiter specializing in electronics and collectibles.",
+    "country": "USA",
+    "chargeFee": 25 // Example fee (assuming it's in a currency unit like USD)
+    // You can include other optional fields as needed, such as:
+    // "status": 1,
+    // "overallRating": 4.5,
+    // "totalResolvedDisputes": 100,
+    // ... other optional fields from the schema ...
+}
+
+
+## TODO API Tests
+
+Untested
+- http://localhost:3002/api/listings/images
+router.post(
+  "/images",
+  authenticateTokenUserAuth,
+  authorizeRole([UserRolesEnum.Seller, UserRolesEnum.Arbiter]),
+  multerMiddleware,
+  uploadImageS3,
+  uploadMoreImages
+);
+
+- http://localhost:3002/api/listings/shuffle-images
+{
+    "phoneId": [LISTING_ID], // Replace with the ID of a listing that has multiple images
+    "photoUrls": [
+        "url3.jpg",
+        "url1.jpg",
+        "url2.jpg" // Example: Reordered the URLs
+    ],
+    "coverPhotoUrl": "url3.jpg" // Example: Setting a new cover photo URL (must be one of the URLs in the photoUrls array)
+}
+
+- http://localhost:3002/api/listings/images
+
+{
+    "phoneId": [LISTING_ID], // Replace with the ID of the listing
+    "urls": [
+        "url_to_delete_1.jpg", // Replace with an actual image URL associated with this listing
+        "url_to_delete_2.png" // Replace with another actual image URL
+    ]
+}
+
+
+
+
+
+1 buyer
+{
+    "uName": "BuyerTestUser1",  // Choose a unique username
+    "email": "buyer1@example.com", // Choose a unique email
+    "password": "TestPassword123" // Choose a password (at least 8 characters)
+}
+
+jwt token
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMSwidXNlck5hbWUiOiJCdXllclRlc3RVc2VyMSIsInNhbHQiOiJjMzlmMGYyZTciLCJpYXQiOjE3NDE4NjAwMDQsImV4cCI6MTc0NzA0NDAwNCwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.5wpnBrSrLr0IcTQudt6d6PdAz2u4vNYS4mPpdTVvii4
+
+
+{
+    "uName": "BuyerArbiter1",  // Choose a unique username
+    "email": "arbiter1@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
+}
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMiwidXNlck5hbWUiOiJCdXllckFyYml0ZXIxIiwic2FsdCI6ImUyZDZmMDA5MCIsImlhdCI6MTc0MTg2ODM1MCwiZXhwIjoxNzQ3MDUyMzUwLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.6na6aKSHxBC2PE16meIpR00wSFu7PnIodwFDd-Hw0Tc
+
+
+
+
+{
+    "uName": "BuyerArbiter2",  // Choose a unique username
+    "email": "arbiter2@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
+}
+
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMywidXNlck5hbWUiOiJCdXllckFyYml0ZXIyIiwic2FsdCI6IjBhOWIxZDhiMCIsImlhdCI6MTc0MTg2ODM2NiwiZXhwIjoxNzQ3MDUyMzY2LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.eK0jUMjD9izWJuV_QTUXqYoE1F_hXa-obj64IsLxaoo
+
+
+
+{
+    "uName": "BuyerArbiter3",  // Choose a unique username
+    "email": "arbiter3@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
+}
+
+    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNCwidXNlck5hbWUiOiJCdXllckFyYml0ZXIzIiwic2FsdCI6IjMyZjUzZWJiNSIsImlhdCI6MTc0MTg2ODM4MiwiZXhwIjoxNzQ3MDUyMzgyLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.hfvdNP2stjP-cR0YY-iHZLTw_MgBKUdLnZNubKgfI4A
+
+
+
+{
+    "uName": "BuyerArbiter4",  // Choose a unique username
+    "email": "arbiter4@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
+}
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNSwidXNlck5hbWUiOiJCdXllckFyYml0ZXI0Iiwic2FsdCI6IjIyNDEyYThiNCIsImlhdCI6MTc0MTg2ODM5NywiZXhwIjoxNzQ3MDUyMzk3LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.har8nu0f5yOdfl3yrZf8QxV8dd0lIzNsYruFyGYqpa0
+
+
+{
+    "uName": "BuyerArbiter5",  // Choose a unique username
+    "email": "arbiter5@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
+}
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNiwidXNlck5hbWUiOiJCdXllckFyYml0ZXI1Iiwic2FsdCI6IjMxYTgzZTVjYSIsImlhdCI6MTc0MTg2ODQyNiwiZXhwIjoxNzQ3MDUyNDI2LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.gAXlWh6L9WpQJcjPbZ3_--y6pktCQ2KjkuVTI6DU-ac
+
+{
+    "uName": "BuyerArbiter6",  // Choose a unique username
+    "email": "arbiter6@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER" // Choose a password (at least 8 characters)
+}
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNywidXNlck5hbWUiOiJCdXllckFyYml0ZXI2Iiwic2FsdCI6IjU3YjliNTUzYiIsImlhdCI6MTc0MTg2ODQzOCwiZXhwIjoxNzQ3MDUyNDM4LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.2-a7vMPt-phslQT-EBaNbfabK_amVifnKvAJHjY5HNI
+
+
+{
+    "uName": "BuyerArbiter8",  // Choose a unique username
+    "email": "arbiter8@example.com", // Choose a unique email
+    "password": "TestPassword123", // Choose a password (at least 8 characters)
+    "userRole":"ARBITER"
+}
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwOSwidXNlck5hbWUiOiJCdXllckFyYml0ZXI4Iiwic2FsdCI6Ijk5Y2EzYjRhYiIsImlhdCI6MTc0MTg2ODQ1NSwiZXhwIjoxNzQ3MDUyNDU1LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.HEfiGe6isUeclO0fNeuMw9IKrhLQZ_xeNFs-fzVitMQ
+
+
+##########SELLER
+
+
+{
+    "uName": "SellerNumber1",  // Choose a unique username
+    "email": "SellerNumber5@example.com", // Choose a unique email
+    "password": "TestPassword123" // Choose a password (at least 8 characters)
+}
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxMCwidXNlck5hbWUiOiJTZWxsZXJOdW1iZXIxIiwic2FsdCI6IjQwMzQ4NTk1YSIsImlhdCI6MTc0MTg2Njg4OCwiZXhwIjoxNzQ3MDUwODg4LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.91Nx4QS-9RT1p8WKJOlekDTYnBN7FVCXdxtG3HIXmNc
+
+{
+    "model": 12345,
+    "price": 500,
+    "status": 1,
+    "currency": "USD",
+    "battery": 90,
+    "bluetooth": 5,
+    "body": 1,
+    "buttons": 1,
+    "cam": 8,
+    "charger": true,
+    "color": "Space Gray",
+    "condition": "Used - Good",
+    "cord": false,
+    "damage": "Minor scratches on screen",
+    "frontCam": 5,
+    "photoUrls": [],  // <----- ADD THIS LINE: Include photoUrls as an empty array
+    "replacements": "None",
+    "screen": 6,
+    "shphoneFrom31662": "US",
+    "storage": 128,
+    "wifi": 5
+}
+
+
+
+{
+    "uName": "SellerNumber2",  // Choose a unique username
+    "email": "SellerNumber2@example.com", // Choose a unique email
+    "password": "TestPassword123" // Choose a password (at least 8 characters)
+}
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxMSwidXNlck5hbWUiOiJTZWxsZXJOdW1iZXIyIiwic2FsdCI6IjE3MDc2NDM0MCIsImlhdCI6MTc0MTk0NTE2MSwiZXhwIjoxNzQ3MTI5MTYxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9._6Sf3gLdkQipn8XVNbWgQVKMEKq7HSb5jDU4qbqp1_A

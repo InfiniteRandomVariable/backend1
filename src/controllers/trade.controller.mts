@@ -22,6 +22,10 @@ import { sendSMS } from "../utils/sns.mjs";
 import { getListingAndSellerDetails } from "../db/queries/user.queries.mts";
 import { incrementUserNotificationCounter } from "../controllers/notification.controller.mts";
 import { z } from "zod";
+import { isDevEnviroment } from "../utils/commonUtil.mts";
+
+const PHONE_STATUS_AVAILABLE = ProductStatus.Available;
+const PURCHASE_OFFER_ACTIVE_STATUSES = [1, 2, 3];
 //import { OgPurchaseOffers } from "../db/interfaces/og_purchase_offers.interface.ts";
 //import { Generated, Timestamp } from "../db/types.ts";
 //import { User } from "../db/interfaces/user.interface.ts";
@@ -120,29 +124,77 @@ export const makePurchaseOfferController = async (
   res: Response
 ) => {
   try {
-    // 1. Parse and Validate Request Body using the *comprehensive* makePurchaseOfferSchema
-    const offerPayload: MakePurchaseOfferPayload =
-      makePurchaseOfferSchema.parse(req.body); // Using makePurchaseOfferSchema for request validation
-
-    // 2. Get Buyer User ID from Authentication
     const buyerUserId = req.user?.id;
     if (!buyerUserId) {
       return res
         .status(401)
         .json({ message: "Unauthorized. Buyer user ID not found." });
     }
-    const arabiterUserIdsFk: number[] | null = Array.isArray(
-      offerPayload.arbiter1UserIdFk
-    ) // {{ edit_1 }}
-      ? offerPayload.arbiter1UserIdFk // {{ edit_1 }}
-      : offerPayload.arbiter1UserIdFk !== undefined // {{ edit_1 }}
-      ? [offerPayload.arbiter1UserIdFk].filter(Boolean).map(Number) // {{ edit_1 }}
-      : null;
+    req.body.buyerUserIdFk = buyerUserId;
+    // 1. Parse and Validate Request Body using the *comprehensive* makePurchaseOfferSchema
+    const offerPayload: MakePurchaseOfferPayload =
+      makePurchaseOfferSchema.parse(req.body); // Using makePurchaseOfferSchema for request validation
+
+    // 3. Check if the buyer already made an offer or if the phone is unavailable
+    // Single query to check both conditions:
+    // 1. Is the phone available?
+    // 2. Has the buyer already made an offer for this phone?
+    const validationResult = await db
+      .with("phoneCheck", (db) =>
+        db
+          .selectFrom("og.phones")
+          .where("id", "=", offerPayload.phoneIdFk)
+          .where("status", "=", PHONE_STATUS_AVAILABLE)
+          .select(["id", "userIdFk as sellerUserId", "status"])
+      )
+      .with("existingOfferCheck", (db) =>
+        db
+          .selectFrom("og.purchaseOffers")
+          .where("phoneIdFk", "=", offerPayload.phoneIdFk)
+          .where("buyerUserIdFk", "=", buyerUserId)
+          .select("id as existingOfferId")
+      )
+      .selectFrom("phoneCheck")
+      .leftJoin("existingOfferCheck", (join) => join.onTrue())
+      .select([
+        "phoneCheck.id as phoneId",
+        "phoneCheck.sellerUserId",
+        "phoneCheck.status as phoneStatus",
+        "existingOfferCheck.existingOfferId",
+      ])
+      .executeTakeFirst();
+
+    // Check if phone exists and is available
+    if (!validationResult) {
+      return res.status(404).json({
+        success: false,
+        message: "Phone not found or is not available for purchase",
+      });
+    }
+
+    // Check if buyer already made an offer for this phone
+    if (validationResult.existingOfferId) {
+      return res.status(409).json({
+        success: false,
+        message: "You already have an active offer for this phone",
+        existingOfferId: validationResult.existingOfferId,
+      });
+    }
+
+    // 2. Get Buyer User ID from Authentication
+
+    const arabiterUserIdsFk = [
+      offerPayload.arbiter1UserIdFk,
+      offerPayload.arbiter2UserIdFk,
+      offerPayload.arbiter3UserIdFk,
+      offerPayload.arbiter4UserIdFk,
+      offerPayload.arbiter5UserIdFk,
+      offerPayload.arbiter6UserIdFk,
+    ].filter((arb) => typeof arb === "number");
     // 3. Call the Service to Create the Purchase Offer
     const newOffer = await createPurchaseOfferService({
       ...offerPayload,
-      arbiterUserIdsFk:
-        arabiterUserIdsFk === null ? undefined : arabiterUserIdsFk, // Assuming service still expects arbiterUserIdFk
+      arbiterUserIdsFk: arabiterUserIdsFk, // Assuming service still expects arbiterUserIdFk
       buyerUserIdFk: buyerUserId,
     });
 
@@ -280,13 +332,14 @@ export const createPurchaseOfferService = async (
 
     newlyCreatedOfferInDb = insertedOffer as OgPurchaseOffersType;
     const listingAndSeller: ListingAndSellerInfo | undefined =
-      await getListingAndSellerDetails(phoneIdFk);
+      await getListingAndSellerDetails(phoneIdFk, ProductStatus.Available);
 
     if (!listingAndSeller) {
       throw new Error(`Error: can't find purchase offer 286`);
     }
     //Send notification section
     const notificationMessage = `New Purchase Offer Created for Listing ID: ${phoneIdFk}. Check your Seller Dashboard for details. SafeUsedPhones.com`;
+
     await sendSMS(String(listingAndSeller.sellerPhone), notificationMessage);
 
     // 6. **Update User Notification Count for 'offers' - after successful offer creation and notification**

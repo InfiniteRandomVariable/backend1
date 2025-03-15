@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import z from "zod";
 import { db } from "../db/database.mts";
 import { UserRolesEnum, UserStatus } from "../db/types.mts";
+import { updateLastSeen } from "../db/queries/user.queries.mts";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
@@ -95,8 +96,7 @@ export const jwt_verify = (
   masterSecretKey: string = MASTER_SECRET as string
 ): Promise<jwt.JwtPayload> => {
   // {{ edit_1 }}
-  console.log("#############masterSecretKey");
-  console.log(masterSecretKey);
+  console.log("#############jwt_verify");
   return new Promise((resolve, reject) => {
     // {{ edit_2 }}
     jwt.verify(token, masterSecretKey, (err, decoded) => {
@@ -223,7 +223,8 @@ export const registerUser = async (req: Request, res: Response) => {
         passwordSalt: hashedPassword,
       })
       .execute();
-
+    console.log("insertedUser.id");
+    console.log(insertedUser.id);
     await db
       .insertInto("og.authStatus")
       .values({
@@ -246,6 +247,19 @@ export const registerUser = async (req: Request, res: Response) => {
       token
     );
 
+    await db
+      .insertInto("og.userRatings")
+      .values({
+        userIdFk: insertedUser.id,
+        lastSeen: new Date(), // You can set an initial lastSeen timestamp
+        userRating: null, // Set initial values for other columns as needed
+        sellingTransactionNum: 0,
+        rejectBuyerNum: 0,
+        arbiterDisputeNum: 0,
+        averageValueNum: null,
+        avgReplyTime: null,
+      })
+      .execute();
     res
       .status(201)
       .json({ message: "User registered successfully", token: token });
@@ -349,7 +363,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const token = jwt_sign(user.userIdFk, user.uName, user.salt);
 
     await upsertTokenByUserRole(user.userIdFk, userRole, password, token);
-
+    await updateLastSeen(user.userIdFk);
     res.json({ token });
   } catch (error) {
     if (error instanceof z.ZodError) {

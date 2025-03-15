@@ -3,6 +3,7 @@ import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 //import AWS from "aws-sdk";
 import * as dotenv from "dotenv";
 import { fromEnv } from "@aws-sdk/credential-providers";
+import { isDevEnviroment } from "./commonUtil.mts";
 dotenv.config();
 
 // Configure AWS SNS
@@ -35,6 +36,9 @@ export const sendSMS = async (
   };
 
   try {
+    if (isDevEnviroment()) {
+      return;
+    }
     const data = await snsClient.send(new PublishCommand(params));
     console.log("SMS message sent successfully:", data); // Optional: log successful sending (for debugging)
   } catch (error: any) {
