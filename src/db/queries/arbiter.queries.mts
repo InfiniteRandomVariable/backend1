@@ -47,7 +47,6 @@ export const getArbitersWithPagination = async (
     let fieldsToSelect = selectFields || defaultSelectFields;
 
     if (!isValidSelectFields(selectFields, PROFILE_ALLOWED_SELECT_FIELDS)) {
-      console.warn("Invalid select fields provided. Using default fields.");
       throw Error("Invalid select fields provided. Using default fields. 51");
       //fieldsToSelect = defaultSelectFields;
     }

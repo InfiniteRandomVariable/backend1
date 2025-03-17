@@ -2,11 +2,12 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import phonesRouter from "./api/phones.mjs"; // Ensure correct extension and path
-import usersRouter from "./api/users.mjs";
+import phonesRouter from "./api/phones.mts"; // Ensure correct extension and path
+import usersRouter from "./api/users.mts";
 import listingsRouter from "./api/listings.mts";
 import arbiterRouter from "./api/arbiter.mts";
-import adminRouter from "./api/admin.mjs";
+import paymentRouter from "./api/payments.mts";
+import adminRouter from "./api/admin.mts";
 import tradeRouter from "./api/trades.mts";
 import { Request, Response } from "express";
 dotenv.config();
@@ -50,7 +51,7 @@ app.use("/api/phones", phonesRouter);
 app.use("/api/listings", listingsRouter);
 app.use("/api/arbiters", arbiterRouter);
 app.use("/api/trades", tradeRouter);
-
+app.use("/api/payments", paymentRouter);
 app.use("/api/admin", adminRouter);
 app
   .listen(port, () => {

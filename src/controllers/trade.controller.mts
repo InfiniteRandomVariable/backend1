@@ -16,6 +16,7 @@ import {
   UserStatus,
   ListingAndSellerInfo,
   NotificationType,
+  UserRolesEnum,
 } from "../db/types.mts";
 import { OgPurchaseOffers } from "../db/kysely-types";
 import { sendSMS } from "../utils/sns.mjs";
@@ -191,6 +192,10 @@ export const makePurchaseOfferController = async (
       offerPayload.arbiter5UserIdFk,
       offerPayload.arbiter6UserIdFk,
     ].filter((arb) => typeof arb === "number");
+
+    if (arabiterUserIdsFk.length !== 6) {
+      throw Error("Require to select 6 arbiters");
+    }
     // 3. Call the Service to Create the Purchase Offer
     const newOffer = await createPurchaseOfferService({
       ...offerPayload,
@@ -233,7 +238,11 @@ export const createPurchaseOfferService = async (
   params: CreatePurchaseOfferServiceParams
 ): Promise<OgPurchaseOffersType> => {
   const { phoneIdFk, arbiterUserIdsFk, buyerUserIdFk, productIdFk } = params; // Now destructuring arbiterUserIdsFk
-  let validArbiterUserIds: number[] = [];
+
+  if (!Array.isArray(arbiterUserIdsFk)) {
+    throw Error("ArbiterUserId must be an array");
+  }
+  let validArbiterUserIds: number[] = arbiterUserIdsFk;
   // **Service Logic:**
 
   // 1. Basic Validation
@@ -374,13 +383,30 @@ export const createPurchaseOfferService = async (
 
 export const getCurrentPurchaseOffers = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
-    if (!userId) {
-      // jwt_verify returns string on error
-      return res.status(401).send({ message: "Unauthorized - Invalid  user" });
+    if (
+      !req ||
+      !req.user ||
+      !req.user.id ||
+      !Array.isArray(req.user.userRoles) ||
+      req.user.userRoles.length === 0
+    ) {
+      console.log("handleReviewPurchaseOffer 26");
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Missing user information." });
     }
+    const userId = req.user.id;
+    const userRoles = req.user.userRoles;
+    console.log(req.user);
+    console.log("handleReviewPurchaseOffer 400");
+    // const userId = req.userId;
+    // if (!userId) {
+    //   // jwt_verify returns string on error
+    //   return res.status(401).send({ message: "Unauthorized - Invalid  user" });
+    // }
 
     // Validate status query parameter if provided
+
     const statusParam = req.query.status;
     let statusFilter: PurchaseOfferStatus | undefined = undefined;
     if (statusParam) {
@@ -398,26 +424,32 @@ export const getCurrentPurchaseOffers = async (req: Request, res: Response) => {
 
     // Determine user role (Seller or Buyer -  simplified role determination based on query logic)
     // For now, we'll differentiate based on how we query - more robust role check might be needed in a real app
-    const isBuyerQuery = true; // Assume buyer query initially, we'll try buyer logic first
+    const isBuyerQuery = userRoles.includes(UserRolesEnum.Buyer); // Assume buyer query initially, we'll try buyer logic firs
+    const isSellerQuery = userRoles.includes(UserRolesEnum.Seller); // Assume buyer query initially, we'll try buyer logic first
 
     let purchaseOffers;
-
-    // Buyer Logic
-    purchaseOffers = await db
-      .selectFrom("og.purchaseOffers")
-      .selectAll()
-      .where("buyerUserIdFk", "=", userId)
-      .where(
-        statusFilter ? "status" : "id",
-        statusFilter ? "=" : ">",
-        statusFilter || 0
-      ) //Conditional status filter, always add a where clause to make it work.
-      .execute();
-
-    if (purchaseOffers.length > 0) {
+    if (isBuyerQuery) {
+      console.log("handleReviewPurchaseOffer 432");
+      // Buyer Logic
+      purchaseOffers = await db
+        .selectFrom("og.purchaseOffers")
+        .selectAll()
+        .where("buyerUserIdFk", "=", userId)
+        .where(
+          statusFilter ? "status" : "id",
+          statusFilter ? "=" : ">",
+          statusFilter || 0
+        ) //Conditional status filter, always add a where clause to make it work.
+        .execute();
+    }
+    if (
+      purchaseOffers &&
+      Array.isArray(purchaseOffers) &&
+      purchaseOffers.length > 0
+    ) {
       // If buyer offers found, assume buyer role
       return res.status(200).json(purchaseOffers);
-    } else {
+    } else if (isSellerQuery) {
       // Seller Logic - If no buyer offers found, try seller logic
       purchaseOffers = await db
         .selectFrom("og.purchaseOffers as purchaseOffer") // Alias for clarity

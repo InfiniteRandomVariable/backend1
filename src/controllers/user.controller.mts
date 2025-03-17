@@ -1,5 +1,6 @@
 // backend/src/controllers/user.controller.mjs
 import { Request, Response } from "express";
+
 import z from "zod";
 import { db } from "../db/database.mts";
 import { UserRolesEnum, UserStatus } from "../db/types.mts";
@@ -10,7 +11,7 @@ import * as dotenv from "dotenv";
 import crypto from "crypto";
 import {
   getRandomNumberInRange,
-  isPasswordValid,
+  isPasswordValidForAdminOrStaff,
 } from "../utils/commonUtil.mts";
 import { Insertable } from "kysely";
 import { OgToken } from "../db/kysely-types";
@@ -26,6 +27,7 @@ const registerSchema = z.object({
   uName: z.string().min(3).max(15),
   email: z.string().email(),
   password: z.string().min(8),
+  userRole: z.string().nullable().optional(),
 });
 
 export const hashUserSalt = async function () {
@@ -184,9 +186,22 @@ export const getHashedPassword = async (password: string) => {
 };
 export const registerUser = async (req: Request, res: Response) => {
   try {
-    const { uName, email, password } = registerSchema.parse(req.body);
+    const { uName, email, password, userRole } = registerSchema.parse(req.body);
+
+    const _userRole =
+      userRole === UserRolesEnum.Admin || userRole === UserRolesEnum.Staff
+        ? userRole
+        : UserRolesEnum.Buyer;
     const hashedPassword = await hashUserPassword(password);
     const hashedUserSalt = await hashUserSalt();
+    const confirmedAdminOrStaff = isPasswordValidForAdminOrStaff(
+      password,
+      _userRole
+    );
+
+    const status = confirmedAdminOrStaff
+      ? UserStatus.Normal
+      : UserStatus.Pending;
 
     // Check if user with email already exists
     const existingUser = await db
@@ -229,23 +244,18 @@ export const registerUser = async (req: Request, res: Response) => {
       .insertInto("og.authStatus")
       .values({
         userIdFk: insertedUser.id,
-        verifiedEmail: false, // {{ edit_1 }}
-        verifiedPhone: false, // {{ edit_1 }}
-        verifiedUserId: false, // {{ edit_1 }}
+        verifiedEmail: confirmedAdminOrStaff, // {{ edit_1 }}
+        verifiedPhone: confirmedAdminOrStaff, // {{ edit_1 }}
+        verifiedUserId: confirmedAdminOrStaff, // {{ edit_1 }}
         isArbiter: false,
         isSeller: false,
-        isStaffAdmin: false,
-        userStatus: UserStatus.Pending,
+        isStaffAdmin: confirmedAdminOrStaff,
+        userStatus: status,
       })
       .execute();
 
     const token = jwt_sign(insertedUser.id, uName, hashedUserSalt);
-    await upsertTokenByUserRole(
-      insertedUser.id,
-      UserRolesEnum.Buyer,
-      password,
-      token
-    );
+    await upsertTokenByUserRole(insertedUser.id, _userRole, password, token);
 
     await db
       .insertInto("og.userRatings")
@@ -297,6 +307,22 @@ export const upsertToken = async function (tokenData: Insertable<OgToken>) {
   return result; // Returns the inserted row (if using returningAll/executeTakeFirst) or void
 };
 
+// function confirmAdminOrStaffRole(
+//   userRole: string,
+//   password: string
+// ): UserRolesEnum {
+//   switch (userRole) {
+//     case UserRolesEnum.Admin:
+//       if (password.includes(adminTrailingPassword)) return UserRolesEnum.Admin;
+//       throw Error("Unauthorized 318");
+//     case UserRolesEnum.Staff:
+//       if (password.includes(staffTrailingPassword)) return UserRolesEnum.Staff;
+//       throw Error("Unauthorized 321");
+//     default:
+//       throw Error("Unauthorized 323");
+//   }
+// }
+
 export const upsertTokenByUserRole = async function (
   userId: number,
   userRole: string,
@@ -318,13 +344,13 @@ export const upsertTokenByUserRole = async function (
     arbiterHash = hashToken;
   } else if (
     userRole === UserRolesEnum.Staff &&
-    isPasswordValid(password, userRole)
+    isPasswordValidForAdminOrStaff(password, userRole)
   ) {
     //password must include "!_!_!"
     staffHash = hashToken;
   } else if (
     userRole === UserRolesEnum.Admin &&
-    isPasswordValid(password, userRole)
+    isPasswordValidForAdminOrStaff(password, userRole)
   ) {
     //password must include "#_#_"
     adminHash = hashToken;
@@ -347,8 +373,11 @@ export const upsertTokenByUserRole = async function (
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
-    const { email, password, userRole } = loginSchema.parse(req.body);
+    let { email, password, userRole } = loginSchema.parse(req.body);
 
+    if (!userRole) {
+      userRole = UserRolesEnum.Buyer;
+    }
     const user = await findUserAuthByEmail(email);
 
     if (!user || !user.passwordSalt || !user.uName || !user.salt) {

@@ -176,6 +176,153 @@ export enum ProductStatus {
   Removed = 14,
 }
 
+export enum PaymentStatus {
+  // Initial/Pending States
+  Pending = 1, // Initial state when a payment record is created (might not be used immediately in manual flow)
+  ProofSubmitted = 10, // Buyer has submitted proof of payment
+
+  // Verification States (for manual proof)
+  VerificationPending = 20, // Payment proof is awaiting review
+  Verified = 30, // Payment proof has been accepted
+  VerificationFailed = 40, // Payment proof was rejected
+
+  // Processing States (for automated gateways)
+  Processing = 50, // Payment is currently being processed
+  AuthorizationPending = 51, // Payment authorization is pending
+  Authorized = 52, // Payment has been authorized
+  Captured = 53, // Payment has been captured (money moved)
+  PartiallyCaptured = 54, // Only part of the payment has been captured
+
+  // Successful Outcome States
+  Paid = 60, // Payment has been successfully processed and confirmed
+  Completed = 61, // Payment process is fully completed
+
+  // Failed/Rejected States
+  Failed = 70, // Payment attempt failed
+  Rejected = 71, // Payment was explicitly rejected (e.g., by gateway or verifier)
+
+  // Refund States
+  RefundInitiated = 80, // Refund process has been started
+  Refunded = 81, // Payment has been fully refunded
+  PartiallyRefunded = 82, // Payment has been partially refunded
+
+  // Cancellation/Void States
+  Voided = 90, // Payment authorization was voided (before capture)
+  Cancelled = 91, // Payment was cancelled by buyer or seller
+
+  // Dispute States
+  DisputeOpened = 100, // A dispute has been opened for this payment
+  DisputeResolvedBuyerWon = 110, // Dispute resolved in favor of the buyer
+  DisputeResolvedSellerWon = 120, // Dispute resolved in favor of the seller
+
+  // Other States
+  Expired = 130, // Payment authorization has expired
+  AwaitingBuyerAction = 140, // Waiting for the buyer to take some action related to the payment
+
+  // Specific to manual flows (can be more descriptive)
+  ManualVerificationPending = 150, // Alias for VerificationPending
+  ManualPaymentReceived = 160, // Payment confirmed through manual proof
+
+  // You can add more specific statuses as needed for your workflow
+}
+
+export enum PaymentSource {
+  // Digital Payment Platforms and Mobile Payment Services
+  Zelle = 201,
+  Venmo = 203,
+  CashApp = 202,
+  ApplePayStandalone = 204, // As a standalone service
+  GooglePayStandalone = 205, // As a standalone service
+  SamsungWallet = 206,
+
+  // Payment Gateways and Processors
+  Stripe = 1,
+  PayPal = 2,
+  Square = 3,
+  Adyen = 4,
+  Braintree = 5,
+  AuthorizeNet = 6,
+  Worldpay = 7,
+  Fiserv = 8,
+  GlobalPayments = 9,
+  ChasePaymentSolutions = 10,
+  BankOfAmericaMerchantServices = 11,
+  WellsFargoMerchantServices = 12,
+  Elavon = 13,
+  NMI = 14,
+  PaylineData = 15,
+  ShopifyPayments = 16,
+  AmazonPay = 17,
+  ApplePay = 18, // As used through gateways
+  GooglePay = 19, // As used through gateways
+  TwoCheckout = 20,
+  BlueSnap = 21,
+  PayU = 22,
+  Bolt = 23,
+  CheckoutCom = 24,
+
+  // Major National Banks
+  BankOfAmerica = 101,
+  JPMorganChase = 102,
+  WellsFargo = 103,
+  Citibank = 104,
+  USBank = 105,
+  CapitalOne = 106,
+  Truist = 107,
+  PNCBank = 108,
+  TDBank = 109,
+  CitizensBank = 110,
+  FifthThirdBank = 111,
+  // Other
+  Other = 999,
+}
+
+export enum PaymentType {
+  // Primary Purchase Types
+  ProductPurchase = 1,
+  ServicePurchase = 2,
+  DigitalProductPurchase = 3,
+  SubscriptionPayment = 4,
+  MembershipFee = 5,
+
+  // Dispute Related Payments
+  DisputeSettlement = 10,
+  DisputeRefund = 11, // Refund issued as a result of a dispute
+  DisputeEscalationFee = 12,
+  DisputeFee = 13, // Fee charged for opening a dispute
+
+  // Arbiter Related Payments
+  ArbiterFee = 15, // Fee paid to an arbiter
+  ArbiterFeeRefund = 16, // Refund of the arbiter fee
+
+  // Fees and Taxes
+  ShippingFee = 20,
+  HandlingFee = 21,
+  SalesTax = 22,
+  PlatformFee = 23,
+  TransactionFee = 24,
+  SellerFee = 25, // Fee charged to the seller by the platform
+  SellerFeeRefund = 26, // Refund of the seller fee
+
+  // Other Transaction Types
+  Donation = 30,
+  Gratuity = 31,
+  GiftCardPurchase = 32,
+  StoreCreditPurchase = 33,
+
+  // Refund and Cancellation Related
+  Refund = 40, // General refund (not specifically dispute-related)
+  PartialRefund = 41,
+  CancellationFee = 42,
+
+  // Payouts (Platform to Sellers)
+  SellerPayment = 50, // Payment made to the seller for a sale
+  AffiliatePayout = 51,
+
+  // Other
+  Other = 999,
+}
+
 export interface OgAuthStatus {
   // {{ edit_3 }}
   id: number;
@@ -220,4 +367,122 @@ export enum NotificationType {
   DisputeUpdates = "disputeUpdates",
   SystemNotes = "systemNotes",
   UrgentNotes = "urgentNotes",
+}
+
+export enum PhoneModel {
+  // Apple iPhone models
+  IPhone7 = 0,
+  IPhone7Plus = 1,
+  IPhone8 = 2,
+  IPhone8Plus = 3,
+  IPhoneX = 4,
+  IPhoneXR = 5,
+  IPhoneXS = 6,
+  IPhoneXSMax = 7,
+  IPhone11 = 8,
+  IPhone11Pro = 9,
+  IPhone11ProMax = 10,
+  IPhone12 = 11,
+  IPhone12Mini = 12,
+  IPhone12Pro = 13,
+  IPhone12ProMax = 14,
+  IPhone13 = 15,
+  IPhone13Mini = 16,
+  IPhone13Pro = 17,
+  IPhone13ProMax = 18,
+  IPhone14 = 19,
+  IPhone14Plus = 20,
+  IPhone14Pro = 21,
+  IPhone14ProMax = 22,
+  IPhone15 = 23,
+  IPhone15Plus = 24,
+  IPhone15Pro = 25,
+  IPhone15ProMax = 26,
+  IPhone16 = 27,
+  IPhone16Plus = 28,
+  IPhone16Pro = 29,
+  IPhone16ProMax = 30,
+  IPhoneSE2 = 31, // 2020
+  IPhoneSE3 = 32, // 2022
+  IPhone17 = 100,
+  IPhone17Plus = 101,
+  IPhone17Pro = 102,
+  IPhone17ProMax = 103,
+
+  // Samsung Galaxy models
+  GalaxyS7 = 33,
+  GalaxyS7Edge = 34,
+  GalaxyS8 = 35,
+  GalaxyS8Plus = 36,
+  GalaxyS9 = 37,
+  GalaxyS9Plus = 38,
+  GalaxyS10 = 39,
+  GalaxyS10Plus = 40,
+  GalaxyS10e = 41,
+  GalaxyS20 = 42,
+  GalaxyS20Plus = 43,
+  GalaxyS20Ultra = 44,
+  GalaxyS21 = 45,
+  GalaxyS21Plus = 46,
+  GalaxyS21Ultra = 47,
+  GalaxyS22 = 48,
+  GalaxyS22Plus = 49,
+  GalaxyS22Ultra = 50,
+  GalaxyS23 = 51,
+  GalaxyS23Plus = 52,
+  GalaxyS23Ultra = 53,
+  GalaxyS24 = 54,
+  GalaxyS24Plus = 55,
+  GalaxyS24Ultra = 56,
+  GalaxyS25 = 57, // Assuming release in 2025
+  GalaxyS25Plus = 58,
+  GalaxyS25Ultra = 59,
+  GalaxyA14 = 60, // Popular budget model
+  GalaxyA15 = 61,
+  GalaxyA54 = 62,
+  GalaxyZFlip5 = 63,
+  GalaxyZFold5 = 64,
+  GalaxyZFlip6 = 65, // 2024
+  GalaxyZFold6 = 66,
+
+  // Google Pixel models
+  Pixel3 = 67,
+  Pixel3XL = 68,
+  Pixel4 = 69,
+  Pixel4XL = 70,
+  Pixel5 = 71,
+  Pixel6 = 72,
+  Pixel6Pro = 73,
+  Pixel7 = 74,
+  Pixel7Pro = 75,
+  Pixel8 = 76,
+  Pixel8Pro = 77,
+  Pixel9 = 78, // 2024
+  Pixel9Pro = 79,
+  Pixel9ProXL = 80,
+  Pixel9ProFold = 81,
+  Pixel8a = 82,
+
+  // Motorola models
+  MotoGPower2023 = 83,
+  MotoGStylus2023 = 84,
+  MotoEdge2023 = 85,
+  MotoRazr2023 = 86,
+  MotoRazrPlus2024 = 87,
+  MotoEdge2024 = 88,
+
+  // OnePlus models
+  OnePlus8 = 89,
+  OnePlus8Pro = 90,
+  OnePlus9 = 91,
+  OnePlus9Pro = 92,
+  OnePlus10Pro = 93,
+  OnePlus11 = 94,
+  OnePlus12 = 95,
+  OnePlus13 = 96, // Assuming 2025 release
+
+  // Other notable brands
+  NokiaG400 = 97, // HMD Global
+  XiaomiRedmiNote13 = 98, // Emerging in USA
+  SonyXperia1V = 99,
 }

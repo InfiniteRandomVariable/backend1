@@ -10,7 +10,7 @@ globs:
 }
 
 jwt token
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMSwidXNlck5hbWUiOiJCdXllclRlc3RVc2VyMSIsInNhbHQiOiJjMzlmMGYyZTciLCJpYXQiOjE3NDE4NjAwMDQsImV4cCI6MTc0NzA0NDAwNCwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.5wpnBrSrLr0IcTQudt6d6PdAz2u4vNYS4mPpdTVvii4
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwOSwidXNlck5hbWUiOiJCdXllckFyYml0ZXI4Iiwic2FsdCI6Ijk5Y2EzYjRhYiIsImlhdCI6MTc0MjAzMDk0MSwiZXhwIjoxNzQ3MjE0OTQxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.0jLEu4XgPgi3Lvi_P4Kx_ANkMdetKpQDcdQ3skdPPRw
 
 
 
@@ -235,10 +235,26 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxMCwidXNlck5hbWUiOiJTZWxsZXJOdW1
 }
 
 
-
+Register
 {
     "uName": "SellerNumber2",  // Choose a unique username
     "email": "SellerNumber2@example.com", // Choose a unique email
     "password": "TestPassword123" // Choose a password (at least 8 characters)
 }
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxMSwidXNlck5hbWUiOiJTZWxsZXJOdW1iZXIyIiwic2FsdCI6IjE3MDc2NDM0MCIsImlhdCI6MTc0MTk0NTE2MSwiZXhwIjoxNzQ3MTI5MTYxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9._6Sf3gLdkQipn8XVNbWgQVKMEKq7HSb5jDU4qbqp1_A
+
+
+# Staff
+Registeration
+{
+    "uName": "StaffNumber1",  // Choose a unique username
+    "email": "StaffNumber1@example.com", // Choose a unique email
+    "password": "Test!_!_!6!3-!", // Choose a password (at least 8 characters)
+    "userRole":"STAFF"
+}
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxOSwidXNlck5hbWUiOiJTdGFmZk51bWJlcjEiLCJzYWx0IjoiMGM3OWQwYzU4IiwiaWF0IjoxNzQyMjAxNzcwLCJleHAiOjE3NDczODU3NzAsImF1ZCI6ImxvY2FsaG9zdC5jb20iLCJpc3MiOiJsb2NhbGhvc3QuY29tIn0.gCmNvKyTfgdNwQ2hhZRQHaP-GHpZJjTQeZHEEVRE0Lg"
+}
+
+

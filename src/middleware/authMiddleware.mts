@@ -170,6 +170,14 @@ export const authorizeRole =
           }
           break;
         default:
+          if (
+            !accumulator.includes(UserRolesEnum.Buyer) &&
+            user.buyerHash != "" &&
+            user.jwtstr.includes(user.buyerHash)
+          ) {
+            accumulator.push(UserRolesEnum.Buyer);
+          }
+
           break;
       }
       return accumulator;
@@ -189,6 +197,7 @@ export const authorizeRole =
     console.log("Authorizing");
     if (matchingRoles.length > 0) {
       console.log("Authorized!");
+      req.user = { ...req.user, userRoles: matchingRoles };
       next(); // User is authorized, proceed
     } else {
       return res

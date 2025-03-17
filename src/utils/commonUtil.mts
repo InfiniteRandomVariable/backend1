@@ -2,7 +2,10 @@
 import fs from "fs/promises";
 import { UserRolesEnum } from "../db/types.mts";
 import { isValidPhoneNumber } from "libphonenumber-js";
-
+import {
+  staffTrailingPassword,
+  adminTrailingPassword,
+} from "../utils/constants.mts";
 import dotenv from "dotenv";
 dotenv.config();
 export function isDevEnviroment() {
@@ -25,7 +28,7 @@ export function getRandomNumberInRange(min: number, max: number) {
 
   return randomInteger;
 }
-export function getMatchingElements(array1: any[], array2: any[]) {
+export function getMatchingElements(array1: string[], array2: string[]) {
   // Use the filter method on array1 to create a new array
   const matchingElements = array1.filter((element) => {
     // For each element in array1, check if it exists in array2 using includes()
@@ -33,14 +36,17 @@ export function getMatchingElements(array1: any[], array2: any[]) {
   });
   return matchingElements;
 }
-export const adminTrailingPassword = "#_#_3_6!3-";
-export const staffTrailingPassword = "!_!_!6!3-";
 
-export function isPasswordValid(password: string, userRole: string) {
+export function isPasswordValidForAdminOrStaff(
+  password: string,
+  userRole: string
+) {
   if (userRole === UserRolesEnum.Admin) {
     return password.endsWith(adminTrailingPassword);
   } else if (userRole === UserRolesEnum.Staff) {
     return password.endsWith(staffTrailingPassword);
+  } else {
+    return false;
   }
 }
 
