@@ -15,6 +15,8 @@ import {
 } from "../utils/commonUtil.mts";
 import { Insertable } from "kysely";
 import { OgToken } from "../db/kysely-types";
+import { sanitizeString } from "../utils/commonUtil.mts";
+
 dotenv.config();
 //const secureKey = crypto.randomBytes(32).toString("hex");
 const MASTER_SECRET = process.env.JWT_SECRET;
@@ -187,12 +189,23 @@ export const getHashedPassword = async (password: string) => {
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { uName, email, password, userRole } = registerSchema.parse(req.body);
+    const _uName = sanitizeString(uName);
+    const _email = sanitizeString(email);
+    const _password = sanitizeString(password);
+
+    if (email !== _email || password !== _password || uName !== _uName) {
+      return res.status(401).json({
+        message: "Invalid entry. Please change to regular pattern. 198",
+      });
+    }
+
+    // const _userRole = sanitizeString(userRole);
 
     const _userRole =
       userRole === UserRolesEnum.Admin || userRole === UserRolesEnum.Staff
         ? userRole
         : UserRolesEnum.Buyer;
-    const hashedPassword = await hashUserPassword(password);
+    const hashedPassword = await hashUserPassword(_password);
     const hashedUserSalt = await hashUserSalt();
     const confirmedAdminOrStaff = isPasswordValidForAdminOrStaff(
       password,
@@ -206,7 +219,7 @@ export const registerUser = async (req: Request, res: Response) => {
     // Check if user with email already exists
     const existingUser = await db
       .selectFrom("og.userDetails")
-      .where("email", "=", email)
+      .where("email", "=", _email)
       .executeTakeFirst();
 
     if (existingUser) {
@@ -216,7 +229,7 @@ export const registerUser = async (req: Request, res: Response) => {
     // Insert user into og.users and og.user_details tables
     const insertedUser = await db
       .insertInto("og.users")
-      .values({ uName })
+      .values({ uName: _uName })
       .returning("id")
       .executeTakeFirst();
 
@@ -226,14 +239,14 @@ export const registerUser = async (req: Request, res: Response) => {
 
     await db
       .insertInto("og.userDetails")
-      .values({ email, userIdFk: insertedUser.id })
+      .values({ email: _email, userIdFk: insertedUser.id })
       .execute();
 
     // Insert auth details
     await db
       .insertInto("og.auth")
       .values({
-        emailFk: email,
+        emailFk: _email,
         salt: hashedUserSalt,
         passwordSalt: hashedPassword,
       })
@@ -254,8 +267,8 @@ export const registerUser = async (req: Request, res: Response) => {
       })
       .execute();
 
-    const token = jwt_sign(insertedUser.id, uName, hashedUserSalt);
-    await upsertTokenByUserRole(insertedUser.id, _userRole, password, token);
+    const token = jwt_sign(insertedUser.id, _uName, hashedUserSalt);
+    await upsertTokenByUserRole(insertedUser.id, _userRole, _password, token);
 
     await db
       .insertInto("og.userRatings")
@@ -374,24 +387,38 @@ export const upsertTokenByUserRole = async function (
 export const loginUser = async (req: Request, res: Response) => {
   try {
     let { email, password, userRole } = loginSchema.parse(req.body);
+    const _email = sanitizeString(email);
+
+    const _password = sanitizeString(password);
+    if (email !== _email || password !== _password) {
+      return res.status(401).json({ message: "Invalid entry 397" });
+    }
 
     if (!userRole) {
       userRole = UserRolesEnum.Buyer;
     }
-    const user = await findUserAuthByEmail(email);
+    const user = await findUserAuthByEmail(String(_email));
 
     if (!user || !user.passwordSalt || !user.uName || !user.salt) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.passwordSalt);
+    const passwordMatch = await bcrypt.compare(
+      String(_password),
+      user.passwordSalt
+    );
 
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt_sign(user.userIdFk, user.uName, user.salt);
 
-    await upsertTokenByUserRole(user.userIdFk, userRole, password, token);
+    await upsertTokenByUserRole(
+      user.userIdFk,
+      userRole,
+      String(_password),
+      token
+    );
     await updateLastSeen(user.userIdFk);
     res.json({ token });
   } catch (error) {

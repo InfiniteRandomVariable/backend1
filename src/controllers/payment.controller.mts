@@ -162,9 +162,6 @@ export const initiatePaymentController = async (
 export const getPaymentsController = async (req: Request, res: Response) => {
   try {
     const userInfo = extractUserInfo(req);
-    if (!userInfo) {
-      throw Error("Invalid user info 165");
-    }
 
     //console.log("req.params:", req.params);
     const loggedUserId = req.user?.id;

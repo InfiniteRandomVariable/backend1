@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { authenticateTokenUserAuth } from "../middleware/authMiddleware.mts";
-import { createMessageThreadController } from "../controllers/message.controller.mts"; // We will create this controller next
+import {
+  createMessageThreadController,
+  createMessageCommentController,
+} from "../controllers/message.controller.mts"; // We will create this controller next
 
 const router = Router();
 
@@ -15,4 +18,24 @@ router.post(
   createMessageThreadController
 );
 
+/**
+ * @route POST /api/messages/threads/:postId/comments
+ * @desc Send a new message (comment) to a thread
+ * @access Private (Authenticated Users)
+ */
+router.post(
+  "/threads/:postId/comments",
+  authenticateTokenUserAuth,
+  createMessageCommentController
+);
+/**
+ * @route GET /api/messages/threads/:postId
+ * @desc Get all messages (comments) for a specific thread
+ * @access Private (Authenticated Users) - For now, let's keep it authenticated
+ */
+router.get(
+  "/threads/:postId",
+  authenticateTokenUserAuth,
+  getMessageCommentsController
+);
 export default router;

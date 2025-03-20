@@ -59,6 +59,19 @@ export const ReviewPurchaseOfferRequestSchema = z.object({
     .optional(), // Optional because not needed for 'reject' action
 });
 
+export const createMessageThreadSchema = z.object({
+  receiverUserIdFk: z.number().int().positive(),
+  phoneIdFk: z.number().int().positive().nullable().optional(),
+  productIdFk: z.number().int().positive().nullable().optional(),
+  title: z.string().min(1),
+  message: z.string().nullable().optional(),
+  disputeIdFk: z.number().int().positive().nullable().optional(),
+});
+
+export const createMessageCommentSchema = z.object({
+  message: z.string().nullable().optional(),
+});
+
 export type ReviewPurchaseOfferRequest = z.infer<
   typeof ReviewPurchaseOfferRequestSchema
 >;

@@ -1,5 +1,6 @@
 // backend/src/controllers/listing.controller.mts
 import { Request, Response } from "express";
+import { sanitizeString } from "../utils/commonUtil.mts";
 import z from "zod";
 import { db } from "../db/database.mts";
 import { deleteImagesFromS3AndDB } from "../utils/imageManagerS3v1.mjs";
@@ -123,6 +124,7 @@ export const createListing = async (req: Request, res: Response) => {
           })
         : [];
     const _newNames = newfilesName.length === 0 ? null : newfilesName;
+    const _condition = sanitizeString(String(listingData.condition));
 
     await db
       .insertInto("og.phoneDetails")
@@ -135,7 +137,7 @@ export const createListing = async (req: Request, res: Response) => {
         cam: listingData.cam,
         charger: listingData.charger,
         color: listingData.color,
-        condition: listingData.condition ? String(listingData.condition) : null,
+        condition: _condition ? String(_condition) : null,
         cord: listingData.cord,
         damage: listingData.damage,
         frontCam: listingData.frontCam,

@@ -1,7 +1,10 @@
+import { Request } from "express";
+
 //backend/src/utils/commonUtil.mts
 import fs from "fs/promises";
 import { UserRolesEnum } from "../db/types.mts";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import DOMPurify from "dompurify";
 import {
   staffTrailingPassword,
   adminTrailingPassword,
@@ -49,6 +52,34 @@ export function isPasswordValidForAdminOrStaff(
     return false;
   }
 }
+
+export const sanitizeString = (
+  html: string | null | undefined
+): string | null | undefined => {
+  if (!html) {
+    return html;
+  }
+  return DOMPurify.sanitize(html);
+};
+export const sanitizeStrings = (strings: string[]): boolean => {
+  return strings.reduce(
+    (accumulator: boolean, currentString: string | null | undefined) => {
+      if (!accumulator) {
+        return false; // If any previous string failed, keep it false
+      }
+
+      if (typeof currentString === "string") {
+        DOMPurify.sanitize(currentString); // Sanitize the string
+        return true; // Assume sanitization is always successful with DOMPurify
+      } else if (currentString === null || currentString === undefined) {
+        return true; // Treat null or undefined strings as successfully processed (no sanitization needed)
+      } else {
+        return false; // If an element in the array is not a string, null, or undefined
+      }
+    },
+    true
+  );
+};
 
 // export function deleteAllLocalImages(files: any) {
 //   try {
@@ -161,4 +192,34 @@ export const generateVerificationCode = (): string => {
   // Generate a 6-digit verification code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   return code;
+};
+
+interface UserInfo {
+  userId: number;
+  userRoles: string[];
+}
+const enumValues = Object.values(UserRolesEnum);
+export const extractUserInfo = (req: Request): UserInfo => {
+  let userId = 0;
+  let userRoles: string[] = [];
+
+  if (req && req.user && req.user.id && typeof req.user.id === "number") {
+    userId = req.user.id;
+  }
+
+  if (
+    Array.isArray(req.user.userRoles) &&
+    req.user.userRoles.length > 0 &&
+    enumValues.every((enumValue) => req.user.userRoles.includes(enumValue))
+  ) {
+    return {
+      userId: userId,
+      userRoles: req.user.userRoles,
+    };
+  }
+
+  return {
+    userId: userId,
+    userRoles: userRoles,
+  };
 };
