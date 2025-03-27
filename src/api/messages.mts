@@ -1,8 +1,11 @@
+// backend/src/api/messages.mts
+
 import { Router } from "express";
 import { authenticateTokenUserAuth } from "../middleware/authMiddleware.mts";
 import {
   createMessageThreadController,
   createMessageCommentController,
+  getMessageCommentsController,
 } from "../controllers/message.controller.mts"; // We will create this controller next
 
 const router = Router();

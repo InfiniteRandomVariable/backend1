@@ -4,14 +4,14 @@ globs:
 ---
 ## Register
 {
-    "uName": "BuyerTestUser1",  // Choose a unique username
-    "email": "buyer1@example.com", // Choose a unique email
-    "password": "TestPassword123" // Choose a password (at least 8 characters)
+  "uName": "BuyerTestUser2",  // Choose a unique username
+    "email": "buyer3@example.com", // Choose a unique email
+    "password": "TestPassword123" 
 }
+buyerid: 3,
 
 jwt token
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwOSwidXNlck5hbWUiOiJCdXllckFyYml0ZXI4Iiwic2FsdCI6Ijk5Y2EzYjRhYiIsImlhdCI6MTc0MjAzMDk0MSwiZXhwIjoxNzQ3MjE0OTQxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.0jLEu4XgPgi3Lvi_P4Kx_ANkMdetKpQDcdQ3skdPPRw
-
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlck5hbWUiOiJCdXllclRlc3RVc2VyMiIsInNhbHQiOiIyY2Q3MDViNDUiLCJpYXQiOjE3NDMwNjcyMTMsImV4cCI6MTc0ODI1MTIxMywiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.P7Yjl5EJTFjoxCxSDtnsYRQRXNZu27mTpW36reQEK0A
 
 
 ## Login
@@ -115,16 +115,6 @@ router.post(
 
 
 
-1 buyer
-{
-    "uName": "BuyerTestUser1",  // Choose a unique username
-    "email": "buyer1@example.com", // Choose a unique email
-    "password": "TestPassword123" // Choose a password (at least 8 characters)
-}
-
-jwt token
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMSwidXNlck5hbWUiOiJCdXllclRlc3RVc2VyMSIsInNhbHQiOiJjMzlmMGYyZTciLCJpYXQiOjE3NDE4NjAwMDQsImV4cCI6MTc0NzA0NDAwNCwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.5wpnBrSrLr0IcTQudt6d6PdAz2u4vNYS4mPpdTVvii4
-
 
 {
     "uName": "BuyerArbiter1",  // Choose a unique username
@@ -132,7 +122,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMSwidXNlck5hbWUiOiJCdXllclRlc3R
     "password": "TestPassword123", // Choose a password (at least 8 characters)
     "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
 }
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMiwidXNlck5hbWUiOiJCdXllckFyYml0ZXIxIiwic2FsdCI6ImUyZDZmMDA5MCIsImlhdCI6MTc0MTg2ODM1MCwiZXhwIjoxNzQ3MDUyMzUwLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.6na6aKSHxBC2PE16meIpR00wSFu7PnIodwFDd-Hw0Tc
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlck5hbWUiOiJCdXllckFyYml0ZXIxIiwic2FsdCI6ImU2NGQ4YWY0YyIsImlhdCI6MTc0MzA2NzMzNywiZXhwIjoxNzQ4MjUxMzM3LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.pvEfgXtbHBxFAamtHO3TfB4iGHswuiX7DMhRGpj5X3w
 
 
 
@@ -145,7 +135,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMiwidXNlck5hbWUiOiJCdXllckFyYml
 }
 
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMywidXNlck5hbWUiOiJCdXllckFyYml0ZXIyIiwic2FsdCI6IjBhOWIxZDhiMCIsImlhdCI6MTc0MTg2ODM2NiwiZXhwIjoxNzQ3MDUyMzY2LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.eK0jUMjD9izWJuV_QTUXqYoE1F_hXa-obj64IsLxaoo
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlck5hbWUiOiJCdXllckFyYml0ZXIyIiwic2FsdCI6ImYxMGNhYmY2MCIsImlhdCI6MTc0MzA2NzM1OCwiZXhwIjoxNzQ4MjUxMzU4LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.A9pPbR99tlH45v0Eao7UyyWCVT_dQlvibtG4fqmSlNM
 
 
 
@@ -156,9 +146,10 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwMywidXNlck5hbWUiOiJCdXllckFyYml
     "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
 }
 
-    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNCwidXNlck5hbWUiOiJCdXllckFyYml0ZXIzIiwic2FsdCI6IjMyZjUzZWJiNSIsImlhdCI6MTc0MTg2ODM4MiwiZXhwIjoxNzQ3MDUyMzgyLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.hfvdNP2stjP-cR0YY-iHZLTw_MgBKUdLnZNubKgfI4A
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlck5hbWUiOiJCdXllckFyYml0ZXIzIiwic2FsdCI6IjE1MTUyNGQyMiIsImlhdCI6MTc0MzA2NzM4MiwiZXhwIjoxNzQ4MjUxMzgyLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.6lBSKhvYYuKHTEgQIJuwg7mnrlH7f-8SFNVKYTHCEY8
 
 
+//could be wrong.
 
 {
     "uName": "BuyerArbiter4",  // Choose a unique username
@@ -177,7 +168,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNSwidXNlck5hbWUiOiJCdXllckFyYml
     "userRole":"ARBITER" // Choose a password (at least 8 characters) // Choose a password (at least 8 characters)
 }
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNiwidXNlck5hbWUiOiJCdXllckFyYml0ZXI1Iiwic2FsdCI6IjMxYTgzZTVjYSIsImlhdCI6MTc0MTg2ODQyNiwiZXhwIjoxNzQ3MDUyNDI2LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.gAXlWh6L9WpQJcjPbZ3_--y6pktCQ2KjkuVTI6DU-ac
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwidXNlck5hbWUiOiJCdXllckFyYml0ZXI1Iiwic2FsdCI6Ijk3YjdkZmUzNSIsImlhdCI6MTc0MzA2NzQ1MSwiZXhwIjoxNzQ4MjUxNDUxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.7wLjMlEdcfLjl3_Q6odT_kgif5LSJBoJNhFiDmZrx4I
 
 {
     "uName": "BuyerArbiter6",  // Choose a unique username
@@ -186,7 +177,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNiwidXNlck5hbWUiOiJCdXllckFyYml
     "userRole":"ARBITER" // Choose a password (at least 8 characters)
 }
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNywidXNlck5hbWUiOiJCdXllckFyYml0ZXI2Iiwic2FsdCI6IjU3YjliNTUzYiIsImlhdCI6MTc0MTg2ODQzOCwiZXhwIjoxNzQ3MDUyNDM4LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.2-a7vMPt-phslQT-EBaNbfabK_amVifnKvAJHjY5HNI
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwidXNlck5hbWUiOiJCdXllckFyYml0ZXI2Iiwic2FsdCI6ImMxYWI3ZjkxZSIsImlhdCI6MTc0MzA2NzQ2OCwiZXhwIjoxNzQ4MjUxNDY4LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.94VsCan23R1yseVNvYgkFts9AbYMzzY85yHdy0Ju5VU
 
 
 {
@@ -196,8 +187,16 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwNywidXNlck5hbWUiOiJCdXllckFyYml
     "userRole":"ARBITER"
 }
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwOSwidXNlck5hbWUiOiJCdXllckFyYml0ZXI4Iiwic2FsdCI6Ijk5Y2EzYjRhYiIsImlhdCI6MTc0MTg2ODQ1NSwiZXhwIjoxNzQ3MDUyNDU1LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.HEfiGe6isUeclO0fNeuMw9IKrhLQZ_xeNFs-fzVitMQ
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTMsInVzZXJOYW1lIjoiQnV5ZXJBcmJpdGVyOCIsInNhbHQiOiI5OGRmMTQ3NWMiLCJpYXQiOjE3NDMwNjkwODUsImV4cCI6MTc0ODI1MzA4NSwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.aN-PvycYT7cvqeWSifpiN1sxGonXHBKWZgH4uSG2Sq8
 
+Currently arbiter ids:
+4, 
+5,
+6, 
+8,
+9,
+12,
+13
 
 ##########SELLER
 
@@ -207,8 +206,9 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcwOSwidXNlck5hbWUiOiJCdXllckFyYml
     "email": "SellerNumber5@example.com", // Choose a unique email
     "password": "TestPassword123" // Choose a password (at least 8 characters)
 }
+seller id 11,
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxMCwidXNlck5hbWUiOiJTZWxsZXJOdW1iZXIxIiwic2FsdCI6IjQwMzQ4NTk1YSIsImlhdCI6MTc0MTg2Njg4OCwiZXhwIjoxNzQ3MDUwODg4LCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.91Nx4QS-9RT1p8WKJOlekDTYnBN7FVCXdxtG3HIXmNc
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJOYW1lIjoiU2VsbGVyTnVtYmVyMSIsInNhbHQiOiI0MjNhMTEzNTUiLCJpYXQiOjE3NDMwNjc5NTQsImV4cCI6MTc0ODI1MTk1NCwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.eT1hYA63VypdjoR-xACc1tFq3jOrABkZT48PyyMWWF0
 
 {
     "model": 12345,
@@ -241,7 +241,7 @@ Register
     "email": "SellerNumber2@example.com", // Choose a unique email
     "password": "TestPassword123" // Choose a password (at least 8 characters)
 }
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxMSwidXNlck5hbWUiOiJTZWxsZXJOdW1iZXIyIiwic2FsdCI6IjE3MDc2NDM0MCIsImlhdCI6MTc0MTk0NTE2MSwiZXhwIjoxNzQ3MTI5MTYxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9._6Sf3gLdkQipn8XVNbWgQVKMEKq7HSb5jDU4qbqp1_A
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTEsInVzZXJOYW1lIjoiU2VsbGVyTnVtYmVyMiIsInNhbHQiOiI2NDE5N2IxNjIiLCJpYXQiOjE3NDMwNjc5OTksImV4cCI6MTc0ODI1MTk5OSwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.8QcP5CmTtYFgcGVj9_F5rCRX5A-hbbvbait-a2oUwZY
 
 
 # Staff
@@ -254,7 +254,7 @@ Registeration
 }
 
 {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcxOSwidXNlck5hbWUiOiJTdGFmZk51bWJlcjEiLCJzYWx0IjoiMGM3OWQwYzU4IiwiaWF0IjoxNzQyMjAxNzcwLCJleHAiOjE3NDczODU3NzAsImF1ZCI6ImxvY2FsaG9zdC5jb20iLCJpc3MiOiJsb2NhbGhvc3QuY29tIn0.gCmNvKyTfgdNwQ2hhZRQHaP-GHpZJjTQeZHEEVRE0Lg"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIsInVzZXJOYW1lIjoiU3RhZmZOdW1iZXIxIiwic2FsdCI6ImI1NDdlMTVlZiIsImlhdCI6MTc0MzA2ODAyMSwiZXhwIjoxNzQ4MjUyMDIxLCJhdWQiOiJsb2NhbGhvc3QuY29tIiwiaXNzIjoibG9jYWxob3N0LmNvbSJ9.jrzeoy4ImsX2N2uRvl8N1ofnYG9YICNzka_Q-_GP8Mc"
 }
 
 

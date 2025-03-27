@@ -226,6 +226,15 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email already registered" });
     }
 
+    const existingUserWithUName = await db
+      .selectFrom("og.users")
+      .where("uName", "=", _uName)
+      .executeTakeFirst();
+
+    if (existingUserWithUName) {
+      return res.status(400).json({ message: "Username already taken" });
+    }
+
     // Insert user into og.users and og.user_details tables
     const insertedUser = await db
       .insertInto("og.users")

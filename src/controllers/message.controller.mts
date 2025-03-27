@@ -15,7 +15,13 @@ export const createMessageThreadController = async (
   try {
     //TODO
     //enhance authentication.
-    const authorUserIdFk = req.user?.id; // Get the logged-in user's ID
+    const userInfo = extractUserInfo(req);
+    const userId = userInfo.userId,
+      authorUserIdFk = userInfo.userId;
+    const userRoles = userInfo.userRoles;
+
+    console.log("userInfo ", userInfo);
+
     if (!authorUserIdFk) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -44,20 +50,146 @@ export const createMessageThreadController = async (
     const _title = sanitizeString(title);
     const _message = sanitizeString(message);
 
-    if (typeof _title !== "string" || _title.length > 5) {
+    if (typeof _title !== "string" || _title.length < 5) {
       return res.status(400).json({ message: "Title is required." });
     }
 
-    if (!phoneIdFk && !productIdFk) {
-      return res
-        .status(400)
-        .json({ message: "Either phone ID or product ID must be provided." });
+    if (!phoneIdFk && !productIdFk && !disputeIdFk) {
+      return res.status(400).json({
+        message: "Either phone ID, product ID, or dispute ID must be provided.",
+      });
     }
 
-    if (phoneIdFk && productIdFk) {
+    if (
+      (phoneIdFk && productIdFk) ||
+      (phoneIdFk && disputeIdFk) ||
+      (productIdFk && disputeIdFk)
+    ) {
       return res.status(400).json({
-        message: "Only one of phone ID or product ID should be provided.",
+        message:
+          "Only one of phone ID, product ID, or dispute ID should be provided.",
       });
+    }
+
+    // Authorization checks
+    if (disputeIdFk) {
+      const disputeInfo = await db
+        .selectFrom("og.disputes as d")
+        .where("d.id", "=", disputeIdFk)
+        .leftJoin("og.payments as p", "d.paymentIdFk", "p.id")
+        .leftJoin("og.purchaseOffers as po", "p.purchaseOfferIdFk", "po.id")
+        .leftJoin("og.phones as ph", "po.phoneIdFk", "ph.id")
+        .select([
+          "d.arbiterUserIdFk",
+          "po.buyerUserIdFk",
+          "po.phoneIdFk",
+          "po.productIdFk",
+          "ph.userIdFk as sellerUserIdFk",
+        ])
+        .executeTakeFirst();
+
+      if (!disputeInfo) {
+        return res.status(400).json({ message: "Invalid dispute ID." });
+      }
+
+      const { arbiterUserIdFk, buyerUserIdFk, sellerUserIdFk, phoneIdFk } =
+        disputeInfo;
+
+      if (userRoles?.includes(UserRolesEnum.Arbiter)) {
+        const isRelatedToDispute =
+          buyerUserIdFk === receiverUserIdFk ||
+          sellerUserIdFk === receiverUserIdFk;
+
+        if (arbiterUserIdFk !== userId || !isRelatedToDispute) {
+          return res.status(403).json({
+            message:
+              "Unauthorized to create a thread for this dispute as an arbiter.",
+          });
+        }
+      } else if (
+        userRoles?.includes(UserRolesEnum.Seller) &&
+        sellerUserIdFk === userId
+      ) {
+        const isSellerInDispute = sellerUserIdFk === userId;
+        const canMessageReceiver =
+          buyerUserIdFk === receiverUserIdFk ||
+          arbiterUserIdFk === receiverUserIdFk;
+
+        if (!isSellerInDispute || !canMessageReceiver) {
+          return res.status(403).json({
+            message:
+              "Unauthorized to create a thread for this dispute as a seller.",
+          });
+        }
+      } else {
+        const isBuyerInDispute = buyerUserIdFk === userId;
+        const canMessageReceiver =
+          sellerUserIdFk === receiverUserIdFk ||
+          arbiterUserIdFk === receiverUserIdFk;
+
+        if (!isBuyerInDispute || !canMessageReceiver) {
+          return res.status(403).json({
+            message:
+              "Unauthorized to create a thread for this dispute as a buyer.",
+          });
+        }
+      }
+    } else if (phoneIdFk) {
+      if (userRoles?.includes(UserRolesEnum.Seller)) {
+        // Check if there's a purchase offer from the receiver to this seller for this phone
+        const purchaseOfferExists = await db
+          .selectFrom("og.purchaseOffers")
+          .where("phoneIdFk", "=", phoneIdFk)
+          .where("buyerUserIdFk", "=", receiverUserIdFk)
+          .select(["id"])
+          .executeTakeFirst();
+
+        // Seller initiating a post to a buyer who made a purchase offer
+        const phone = await db
+          .selectFrom("og.phones")
+          .where("id", "=", phoneIdFk)
+          .select(["userIdFk"])
+          .executeTakeFirst();
+
+        if (
+          !purchaseOfferExists ||
+          !phone ||
+          phone.userIdFk !== receiverUserIdFk
+        ) {
+          return res.status(403).json({
+            message:
+              "Unauthorized to create a thread. No active purchase offer found from this buyer for this phone. Unauthorized to create a thread for this phone item with this receiver (buyer initiating).",
+          });
+        }
+      } else if (!userRoles?.includes(UserRolesEnum.Seller)) {
+        const phone = await db
+          .selectFrom("og.phones")
+          .where("id", "=", phoneIdFk)
+          .select(["userIdFk"])
+          .executeTakeFirst();
+
+        if (!phone || phone.userIdFk !== receiverUserIdFk) {
+          return res.status(403).json({
+            message:
+              "Unauthorized to create a thread for this phone item with this receiver (buyer initiating).",
+          });
+        }
+      } else {
+        return res.status(403).json({
+          message:
+            "Only buyers or sellers (after a purchase offer) can initiate a thread for a phone item.",
+        });
+      }
+    } else if (productIdFk) {
+      // Add logic for product-related messaging if needed in the future.
+      // For now, we'll assume any logged-in user can initiate a thread for a product (you can adjust this).
+      // Consider adding role-based restrictions similar to phoneIdFk.
+    } else {
+      // This case should ideally not be reached due to the earlier check,
+      // but it's good to have a fallback.
+      return res
+        .status(400)
+        .json({ message: "Invalid request: Missing item identifier." });
     }
 
     // Create the new post (thread)
@@ -193,13 +325,17 @@ export const getMessageCommentsController = async (
 ) => {
   try {
     const userInfo = extractUserInfo(req);
-    // const userRoles = userInfo && userInfo.userRoles? userInfo.userRoles : null;
-
-    //console.log("req.params:", req.params);
     const userId = userInfo.userId;
     const userRoles = userInfo.userRoles;
 
     const postId = parseInt(req.params.postId, 10);
+    const parsedBody = createMessageThreadSchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      return res.status(400).json({
+        message: "Invalid request body.",
+        errors: parsedBody.error.issues,
+      });
+    }
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -325,11 +461,9 @@ export const getUserMessageThreadsController = async (
     });
   } catch (error: any) {
     console.error("Error fetching user message threads:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Failed to fetch message threads.",
-        error: error.message,
-      });
+    return res.status(500).json({
+      message: "Failed to fetch message threads.",
+      error: error.message,
+    });
   }
 };

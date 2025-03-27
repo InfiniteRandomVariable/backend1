@@ -5,12 +5,23 @@ import fs from "fs/promises";
 import { UserRolesEnum } from "../db/types.mts";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
 import {
   staffTrailingPassword,
   adminTrailingPassword,
 } from "../utils/constants.mts";
 import dotenv from "dotenv";
 dotenv.config();
+
+let DOMPurifyInstance: typeof DOMPurify;
+// Initialize DOMPurify
+const initializeDOMPurify = () => {
+  if (!DOMPurifyInstance) {
+    const { window } = new JSDOM(""); // You can pass HTML content if needed
+    DOMPurifyInstance = DOMPurify(window);
+  }
+};
+
 export function isDevEnviroment() {
   const env = process.env.PRODUCTION_ENV;
   return env === "dev";
@@ -59,7 +70,15 @@ export const sanitizeString = (
   if (!html) {
     return html;
   }
-  return DOMPurify.sanitize(html);
+
+  initializeDOMPurify(); // Ensure DOMPurify is initialized
+
+  if (DOMPurifyInstance && typeof DOMPurifyInstance.sanitize === "function") {
+    return DOMPurifyInstance.sanitize(html);
+  } else {
+    console.error("DOMPurify is not correctly initialized.");
+    return html;
+  }
 };
 export const sanitizeStrings = (strings: string[]): boolean => {
   return strings.reduce(
