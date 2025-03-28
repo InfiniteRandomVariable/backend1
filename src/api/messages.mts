@@ -6,6 +6,7 @@ import {
   createMessageThreadController,
   createMessageCommentController,
   getMessageCommentsController,
+  getUserMessageThreadsController,
 } from "../controllers/message.controller.mts"; // We will create this controller next
 
 const router = Router();
@@ -41,4 +42,17 @@ router.get(
   authenticateTokenUserAuth,
   getMessageCommentsController
 );
+
+/**
+ * @route GET /api/messages/threads
+ * @desc Get all message threads for the authenticated user with pagination
+ * @access Private (Authenticated Users)
+ */
+
+router.get(
+  "/threads",
+  authenticateTokenUserAuth,
+  getUserMessageThreadsController
+);
+
 export default router;

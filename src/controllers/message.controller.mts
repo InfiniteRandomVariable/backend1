@@ -219,7 +219,7 @@ export const createMessageThreadController = async (
         .insertInto("og.comments")
         .values({
           postIdFk: newPost.id,
-          commenterIdFk: parseInt(authorUserIdFk, 10),
+          commenterIdFk: authorUserIdFk,
           message: _message,
           createdBy: new Date(), // Add the createdBy property with the current timestamp
         })
@@ -329,13 +329,6 @@ export const getMessageCommentsController = async (
     const userRoles = userInfo.userRoles;
 
     const postId = parseInt(req.params.postId, 10);
-    const parsedBody = createMessageThreadSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-      return res.status(400).json({
-        message: "Invalid request body.",
-        errors: parsedBody.error.issues,
-      });
-    }
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -381,7 +374,7 @@ export const getMessageCommentsController = async (
         "createdBy",
       ])
       .where("postIdFk", "=", postId)
-      .orderBy("createdBy", "desc")
+      .orderBy("id", "desc")
       .execute();
 
     return res.status(200).json(comments);
@@ -399,7 +392,7 @@ export const getUserMessageThreadsController = async (
   try {
     const userId = req.user?.id;
     const page = parseInt((req.query.page as string) || "1", 10);
-    const limit = parseInt((req.query.limit as string) || "10", 50);
+    const limit = 50;
     const offset = (page - 1) * limit;
 
     if (!userId) {
@@ -436,7 +429,7 @@ export const getUserMessageThreadsController = async (
           eb("og.posts.receiverUserIdFk", "=", parseInt(userId, 10))
         )
       )
-      .orderBy("og.posts.createdBy", "desc")
+      .orderBy("og.posts.id", "desc")
       .limit(limit)
       .offset(offset)
       .execute();
@@ -451,13 +444,13 @@ export const getUserMessageThreadsController = async (
       )
       .executeTakeFirst();
 
-    const totalCount = totalCountResult?.total || 0;
-
+    const totalCount = Number(totalCountResult?.total) || 0;
+    const totalPage = Math.ceil(totalCount / Number(limit));
     return res.status(200).json({
       threads,
       totalCount,
       currentPage: page,
-      totalPages: Math.ceil(totalCount / limit),
+      totalPages: totalPage,
     });
   } catch (error: any) {
     console.error("Error fetching user message threads:", error);
