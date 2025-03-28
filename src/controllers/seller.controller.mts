@@ -2,11 +2,15 @@
 import { Request, Response } from "express";
 import { CreatePurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 import { db } from "../db/database.mts";
-import { sendSMS } from "../utils/sns.mts"; // Import sendSMS utility
 import { getUserDetailsList } from "../utils/user.mts";
 import { ReviewPurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 
-import { PurchaseOfferStatus, ProductStatus } from "../db/types.mjs";
+import {
+  PurchaseOfferStatus,
+  ProductStatus,
+  NotificationType,
+} from "../db/types.mjs";
+import { sendGenericNotifications } from "../utils/notification.mts";
 
 /**
  * @controller POST /api/trades/offers/:purchaseOfferId/review
@@ -157,10 +161,16 @@ export const handleReviewPurchaseOffer = async (
           .where("og.purchaseOffers.id", "=", purchaseOfferId)
           .execute();
         const deletionMessageBuyer = `Purchase offer for phone listing has been deleted because seller selected invalid arbiters.`;
-        //  const deletionMessageSeller = `Purchase offer ${purchaseOfferId} for your listing ${purchaseOffer.phoneIdFk} was deleted because invalid arbiters were selected. Please review and try again or reject the offer.`;
+
         try {
-          if (buyerDetails.phoneNumber)
-            await sendSMS(buyerDetails.phoneNumber, deletionMessageBuyer);
+          if (buyerDetails.phone)
+            sendGenericNotifications(
+              purchaseOffer.buyerUserIdFk,
+              deletionMessageBuyer,
+              deletionMessageBuyer,
+              NotificationType.RejectOffers
+            );
+
           console.log(
             `SMS notifications sent for offer deletion ${purchaseOfferId}.`
           ); // Success log
@@ -198,8 +208,14 @@ export const handleReviewPurchaseOffer = async (
       );
 
       const acceptedMessageBuyer = `Purchase offer for phone accepted. Please make payment in 48 hours`;
-      if (buyerDetails.phoneNumber) {
-        await sendSMS(buyerDetails.phoneNumber, acceptedMessageBuyer);
+      if (buyerDetails.phone) {
+        //await sendSMS(buyerDetails.phone, acceptedMessageBuyer);
+        sendGenericNotifications(
+          purchaseOffer.buyerUserIdFk,
+          acceptedMessageBuyer,
+          acceptedMessageBuyer,
+          NotificationType.Accepts
+        );
       }
 
       action = "accepted";
@@ -208,8 +224,13 @@ export const handleReviewPurchaseOffer = async (
       // 4.b.i. Update Purchase Offer Status to "RejectedBySeller"
 
       const rejectedMessageBuyer = `Purchase offer for phone listing is not available. Try another one.`;
-      if (buyerDetails.phoneNumber) {
-        await sendSMS(buyerDetails.phoneNumber, rejectedMessageBuyer);
+      if (buyerDetails.phone) {
+        sendGenericNotifications(
+          purchaseOffer.buyerUserIdFk,
+          rejectedMessageBuyer,
+          rejectedMessageBuyer,
+          NotificationType.RejectOffers
+        );
       }
 
       await db

@@ -1,10 +1,12 @@
 import { db } from "../db/database.mts";
 import { getPhoneModelName } from "../utils/phoneModelInterpreter.mts";
 import { isDevEnviroment } from "./commonUtil.mts";
-interface UserDetails {
-  userIdFk: number;
-  phoneNumber: string | null;
-}
+import { OgUserDetails } from "../db/kysely-types";
+// export interface UserDetails {
+//   userIdFk: number;
+//   phoneNumber: string | null;
+//   email: string | null;
+// }
 
 /**
  * @function getUserDetailsList
@@ -15,7 +17,7 @@ interface UserDetails {
  */
 export const getUserDetailsList = async (
   userIds: number[]
-): Promise<UserDetails[]> => {
+): Promise<OgUserDetails[]> => {
   if (!userIds || userIds.length === 0) {
     return []; // Return empty array if no user IDs are provided
   }
@@ -24,7 +26,7 @@ export const getUserDetailsList = async (
     .selectFrom("og.userDetails") // Use your actual OgUserDetails table name here if different
     .where("og.userDetails.userIdFk", "in", userIds)
     .selectAll()
-    .$castTo<UserDetails>() // Cast the result to the UserDetails interface
+    .$castTo<OgUserDetails>() // Cast the result to the UserDetails interface
     .execute();
 
   return userDetailsList;

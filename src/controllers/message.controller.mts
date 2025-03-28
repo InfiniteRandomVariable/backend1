@@ -2,7 +2,8 @@
 import { Request, Response } from "express";
 import { db } from "../db/database.mts";
 import { sanitizeString, extractUserInfo } from "../utils/commonUtil.mts";
-import { UserRolesEnum } from "../db/types.mts";
+import { sendGenericNotifications } from "../utils/notification.mts";
+import { UserRolesEnum, NotificationType } from "../db/types.mts";
 
 import {
   createMessageThreadSchema,
@@ -226,6 +227,13 @@ export const createMessageThreadController = async (
         .execute();
     }
 
+    sendGenericNotifications(
+      receiverUserIdFk,
+      "New messaged received",
+      "New messaged received",
+      NotificationType.Messages
+    );
+
     return res.status(201).json({
       message: "Message thread created successfully.",
       postId: newPost.id,
@@ -309,6 +317,12 @@ export const createMessageCommentController = async (
         createdBy: new Date(),
       })
       .execute();
+    sendGenericNotifications(
+      post.receiverUserIdFk,
+      "New messaged received",
+      "New messaged received",
+      NotificationType.Messages
+    );
 
     return res.status(201).json({ message: "Comment added successfully." });
   } catch (error: any) {
@@ -351,7 +365,7 @@ export const getMessageCommentsController = async (
         "og.comments.createdBy",
       ])
       .where("og.posts.id", "=", postId)
-      .orderBy("og.comments.createdBy", "desc")
+      .orderBy("og.comments.id", "desc")
       .execute();
 
     if (
@@ -461,7 +475,114 @@ export const getMessageCommentsController1 = async (
       .json({ message: "Failed to fetch comments.", error: error.message });
   }
 };
+
 export const getUserMessageThreadsController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = req.user?.id;
+    const page = parseInt((req.query.page as string) || "1", 10);
+    const limit = 50;
+    const offset = (page - 1) * limit;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (isNaN(page) || page < 1) {
+      return res
+        .status(400)
+        .json({ message: "Invalid pagination parameters." });
+    }
+
+    const result = await db
+      .with("threadQuery", (db) =>
+        db
+          .selectFrom("og.posts")
+          .leftJoin(
+            "og.users as author",
+            "og.posts.authorUserIdFk",
+            "author.id"
+          )
+          .leftJoin(
+            "og.users as receiver",
+            "og.posts.receiverUserIdFk",
+            "receiver.id"
+          )
+          .select([
+            "og.posts.id",
+            "og.posts.title",
+            "og.posts.authorUserIdFk",
+            "author.uName as authorUName",
+            "og.posts.receiverUserIdFk",
+            "receiver.uName as receiverUName",
+            "og.posts.phoneIdFk",
+            "og.posts.productIdFk",
+            "og.posts.createdBy",
+          ])
+          .where((eb) =>
+            eb("og.posts.authorUserIdFk", "=", parseInt(userId, 10)).or(
+              eb("og.posts.receiverUserIdFk", "=", parseInt(userId, 10))
+            )
+          )
+      )
+      .with("threadCount", (db) =>
+        db
+          .selectFrom("threadQuery")
+          .select(({ fn }) => fn.countAll().as("total"))
+      )
+      .selectFrom("threadQuery")
+      .select([
+        "id",
+        "title",
+        "authorUserIdFk",
+        "authorUName",
+        "receiverUserIdFk",
+        "receiverUName",
+        "phoneIdFk",
+        "productIdFk",
+        "createdBy",
+      ])
+      .orderBy("id", "desc")
+      .limit(limit)
+      .offset(offset)
+      .leftJoin("threadCount", (join) => join.onTrue())
+      .select((eb) => ["threadCount.total"])
+      .execute();
+
+    // Destructure the results
+    const threads = result.map((row) => ({
+      id: row.id,
+      title: row.title,
+      authorUserIdFk: row.authorUserIdFk,
+      authorUName: row.authorUName,
+      receiverUserIdFk: row.receiverUserIdFk,
+      receiverUName: row.receiverUName,
+      phoneIdFk: row.phoneIdFk,
+      productIdFk: row.productIdFk,
+      createdBy: row.createdBy,
+    }));
+
+    const totalCount = Number(result[0]?.total) || 0;
+    const totalPage = Math.ceil(totalCount / Number(limit));
+
+    return res.status(200).json({
+      threads,
+      totalCount,
+      currentPage: page,
+      totalPages: totalPage,
+    });
+  } catch (error: any) {
+    console.error("Error fetching user message threads:", error);
+    return res.status(500).json({
+      message: "Failed to fetch message threads.",
+      error: error.message,
+    });
+  }
+};
+
+export const getUserMessageThreadsController1 = async (
   req: Request,
   res: Response
 ) => {
