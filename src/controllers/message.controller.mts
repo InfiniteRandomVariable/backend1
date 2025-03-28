@@ -318,8 +318,84 @@ export const createMessageCommentController = async (
       .json({ message: "Failed to add comment.", error: error.message });
   }
 };
-
 export const getMessageCommentsController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userInfo = extractUserInfo(req);
+    const userId = userInfo.userId;
+    const userRoles = userInfo.userRoles;
+
+    const postId = parseInt(req.params.postId, 10);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (isNaN(postId) || postId <= 0) {
+      return res.status(400).json({ message: "Invalid post ID." });
+    }
+
+    const postAndComments = await db
+      .selectFrom("og.posts")
+      .leftJoin("og.comments", "og.posts.id", "og.comments.postIdFk")
+      .select([
+        "og.posts.authorUserIdFk",
+        "og.posts.receiverUserIdFk",
+        "og.comments.id as commentId",
+        "og.comments.postIdFk",
+        "og.comments.commenterIdFk",
+        "og.comments.message",
+        "og.comments.photoUrl",
+        "og.comments.createdBy",
+      ])
+      .where("og.posts.id", "=", postId)
+      .orderBy("og.comments.createdBy", "desc")
+      .execute();
+
+    if (
+      !postAndComments ||
+      postAndComments.length === 0 ||
+      !postAndComments[0].authorUserIdFk
+    ) {
+      return res.status(404).json({ message: "Message thread not found." });
+    }
+
+    const postInfo = postAndComments[0];
+    const isAuthorized =
+      userId === postInfo.authorUserIdFk ||
+      userId === postInfo.receiverUserIdFk ||
+      userRoles?.includes(UserRolesEnum.Admin) ||
+      userRoles?.includes(UserRolesEnum.Staff);
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message:
+          "Forbidden - You are not authorized to view comments for this thread.",
+      });
+    }
+
+    const comments = postAndComments
+      .filter((row) => row.commentId !== null) // Filter out rows where there are no comments
+      .map((row) => ({
+        id: row.commentId,
+        postIdFk: row.postIdFk,
+        commenterIdFk: row.commenterIdFk,
+        message: row.message,
+        photoUrl: row.photoUrl,
+        createdBy: row.createdBy,
+      }));
+
+    return res.status(200).json(comments);
+  } catch (error: any) {
+    console.error("Error fetching comments:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch comments.", error: error.message });
+  }
+};
+export const getMessageCommentsController1 = async (
   req: Request,
   res: Response
 ) => {
