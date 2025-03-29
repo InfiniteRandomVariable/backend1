@@ -3,7 +3,7 @@
 import { Request, Response } from "express";
 import { db } from "../db/database.mts"; // Adjust path as needed
 import { PurchaseOfferStatus } from "../db/types.mts"; // Adjust path as needed
-import { extractUserInfo } from "../utils/auth.mts";
+import { extractUserInfo } from "../utils/commonUtil.mjs";
 import {
   PaymentStatus,
   PaymentType,
@@ -11,10 +11,20 @@ import {
   UserRolesEnum,
 } from "../db/types.mts"; // Assuming you have this enum defined
 import { getSellerDetailsFromPurchaseOffer } from "../utils/user.mts";
-import { sendSMS } from "../utils/sns.mts";
 import { isDevEnviroment } from "../utils/commonUtil.mts";
 import { appName } from "../utils/constants.mts";
+import { NotificationType } from "../db/types.mts";
+import { sendGenericNotifications } from "../utils/notification.mts";
+import { z } from "zod";
 
+const initiatePaymentSchema = z.object({
+  paymentSource: z.nativeEnum(PaymentSource),
+  transactionCode: z.string().optional(),
+  referenceCode: z.string().optional(),
+  amountPaid: z.number().positive(),
+  type: z.nativeEnum(PaymentType),
+});
+type InitiatePaymentPayload = z.infer<typeof initiatePaymentSchema>;
 export const initiatePaymentController = async (
   req: Request,
   res: Response
@@ -31,9 +41,17 @@ export const initiatePaymentController = async (
 
     console.log("createListing 94");
     const firstPhotoUrl =
-      Array.isArray(files) && files.length > 0 ? files[0] : null; //remove the first element and return the first element
+      Array.isArray(files) && files.length > 0
+        ? files[0]
+        : isDevEnviroment()
+        ? ""
+        : null; //remove the first element and return the first element
     const secondPhotoUrl =
-      Array.isArray(files) && files.length > 1 ? files[1] : null;
+      Array.isArray(files) && files.length > 1
+        ? files[1]
+        : isDevEnviroment()
+        ? ""
+        : null; //r
     // 1. Extract purchaseOfferId from parameters
     const purchaseOfferId = parseInt(req.params.purchaseOfferId, 10);
     if (isNaN(purchaseOfferId) || purchaseOfferId <= 0) {
@@ -71,30 +89,18 @@ export const initiatePaymentController = async (
           "Payment proof can only be submitted for offers accepted by the seller.",
       });
     }
-
-    // 5. Get payment proof details from the request body
-    const { paymentSource, transactionCode, referenceCode, amount_paid, type } =
-      req.body;
-
-    // 6. Validate 'type' against the PaymentType enum
-    if (
-      type === undefined ||
-      !Object.values(PaymentType).includes(type as PaymentType)
-    ) {
+    // 5. Parse and validate the request body using Zod
+    let parsedBody: InitiatePaymentPayload;
+    try {
+      parsedBody = initiatePaymentSchema.parse(req.body);
+    } catch (error: any) {
       return res
         .status(400)
-        .json({ message: "Invalid payment type provided." });
+        .json({ message: "Invalid request body", errors: error.errors });
     }
 
-    // 7. Validate 'paymentSource' against the PaymentSource enum
-    if (
-      paymentSource === undefined ||
-      !Object.values(PaymentSource).includes(paymentSource as PaymentSource)
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Invalid payment source provided." });
-    }
+    const { paymentSource, transactionCode, referenceCode, amountPaid, type } =
+      parsedBody;
 
     // 8. Create a new record in the OgPayments table
 
@@ -107,7 +113,7 @@ export const initiatePaymentController = async (
         photoUrl2: secondPhotoUrl,
         paymentSource: paymentSource,
         paymentReference: transactionCode || referenceCode || null,
-        amountPaid: amount_paid,
+        amountPaid: amountPaid,
         status: PaymentStatus.ProofSubmitted,
         type: type,
       })
@@ -120,29 +126,22 @@ export const initiatePaymentController = async (
         .json({ message: "Failed to record payment proof." });
     }
 
-    // 9. Update the PurchaseOfferStatus to PaymentProofSubmittedByBuyer
+    // 9. Update the PurchaseOfferStatus to Pending (assuming this means Payment Proof Submitted)
     await db
       .updateTable("og.purchaseOffers")
       .set({ status: PurchaseOfferStatus.Pending })
       .where("id", "=", purchaseOfferId)
       .execute();
 
-    if (sellerDetails.userPhoneNumber.length > 6) {
-      // 12. Construct the SNS notification message
-      const message = `Buyer made a payment for "${sellerDetails.modelName}", please verify it asap in your ${appName} before deletion of the payment photos`;
-
-      try {
-        await sendSMS(String(sellerDetails.userPhoneNumber), message);
-        console.log("SNS notification sent to seller.");
-      } catch (snsError) {
-        console.error("Error sending SNS notification:", snsError);
-        // Decide if this error should impact the overall response
-      }
-    } else {
-      console.warn(
-        `Seller ${sellerDetails.userId} does not have a registered SNS notification endpoint.`
-      );
-    }
+    // 6. Send notification to the seller
+    const notificationSubject = "Payment Initiated";
+    const notificationMessage = `The buyer has submitted payment proof for ${sellerDetails.productName} ${sellerDetails.modelName} ${sellerDetails.modelNum}. OfferId ${purchaseOfferId} Please verify it in your dashboard.`;
+    await sendGenericNotifications(
+      sellerDetails.userId, // Assuming sellerDetails has sellerUserId
+      notificationSubject,
+      notificationMessage,
+      NotificationType.PaymnetPendingApproval
+    );
 
     // 14. Return a success response
     return res.status(200).json({

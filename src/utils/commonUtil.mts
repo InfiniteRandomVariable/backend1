@@ -242,3 +242,14 @@ export const extractUserInfo = (req: Request): UserInfo => {
     userRoles: userRoles,
   };
 };
+
+export function containsAnyUserRoles(
+  mainArray: string[],
+  elementsToCheck: UserRolesEnum[]
+) {
+  if (!Array.isArray(mainArray) || !Array.isArray(elementsToCheck)) {
+    return false; // Or throw an error, depending on desired behavior for invalid input
+  }
+
+  return elementsToCheck.some((element) => mainArray.includes(element));
+}

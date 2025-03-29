@@ -206,7 +206,7 @@ Currently arbiter ids:
     "email": "SellerNumber5@example.com", // Choose a unique email
     "password": "TestPassword123" // Choose a password (at least 8 characters)
 }
-seller id 11,
+seller id 10,
 
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJOYW1lIjoiU2VsbGVyTnVtYmVyMSIsInNhbHQiOiI0MjNhMTEzNTUiLCJpYXQiOjE3NDMwNjc5NTQsImV4cCI6MTc0ODI1MTk1NCwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.eT1hYA63VypdjoR-xACc1tFq3jOrABkZT48PyyMWWF0
 
@@ -241,7 +241,7 @@ Register
     "email": "SellerNumber2@example.com", // Choose a unique email
     "password": "TestPassword123" // Choose a password (at least 8 characters)
 }
-sellerid 12
+sellerid 11
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTEsInVzZXJOYW1lIjoiU2VsbGVyTnVtYmVyMiIsInNhbHQiOiI2NDE5N2IxNjIiLCJpYXQiOjE3NDMwNjc5OTksImV4cCI6MTc0ODI1MTk5OSwiYXVkIjoibG9jYWxob3N0LmNvbSIsImlzcyI6ImxvY2FsaG9zdC5jb20ifQ.8QcP5CmTtYFgcGVj9_F5rCRX5A-hbbvbait-a2oUwZY
 
 

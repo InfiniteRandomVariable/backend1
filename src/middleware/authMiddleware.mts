@@ -196,8 +196,9 @@ export const authorizeRole =
     const matchingRoles = getMatchingElements(userRoles, allowedRoles);
     console.log("Authorizing");
     if (matchingRoles.length > 0) {
-      console.log("Authorized!");
+      console.log("Authorized! and matchingRoles ", matchingRoles);
       req.user = { ...req.user, userRoles: matchingRoles };
+      console.log("req.user ", req.user);
       next(); // User is authorized, proceed
     } else {
       return res

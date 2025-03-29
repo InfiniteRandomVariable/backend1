@@ -14,10 +14,16 @@ export const extractUserInfo = (req: Request): UserInfo => {
     userId = req.user.id;
   }
 
+  const didMatchEnum = enumValues.some((enumValue) =>
+    req.user.userRoles.includes(enumValue)
+  );
+  // console.log("req.user.userRoles ", req.user.userRoles);
+  // console.log("didMatchEnum ", didMatchEnum);
+
   if (
     Array.isArray(req.user.userRoles) &&
     req.user.userRoles.length > 0 &&
-    enumValues.every((enumValue) => req.user.userRoles.includes(enumValue))
+    didMatchEnum
   ) {
     return {
       userId: userId,
