@@ -367,7 +367,7 @@ export enum NotificationType {
   DisputeUpdates = "disputeUpdates",
   SystemNotes = "systemNotes",
   UrgentNotes = "urgentNotes",
-  PaymnetPendingApproval = "PaymnetPendingApproval",
+  PaymentUpdates = "paymentUpdates",
 }
 
 export enum PhoneModel {

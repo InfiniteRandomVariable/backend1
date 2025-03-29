@@ -266,6 +266,7 @@ CREATE TABLE IF NOT EXISTS og.user_notifications
     system_notes smallint,
     urgent_notes smallint,
     dispute_updates smallint,
+    payment_updates smallint,
     dispute_requests smallint,
     dispute_rejections smallint,
     PRIMARY KEY (user_id_fk)

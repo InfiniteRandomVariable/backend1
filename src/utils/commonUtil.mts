@@ -2,7 +2,7 @@ import { Request } from "express";
 
 //backend/src/utils/commonUtil.mts
 import fs from "fs/promises";
-import { UserRolesEnum } from "../db/types.mts";
+import { UserRolesEnum, PhoneModel, PaymentStatus } from "../db/types.mts";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import DOMPurify from "dompurify";
 import { JSDOM } from "jsdom";
@@ -252,4 +252,19 @@ export function containsAnyUserRoles(
   }
 
   return elementsToCheck.some((element) => mainArray.includes(element));
+}
+export function getPhoneModelString(modelNumber: number | null): string {
+  if (modelNumber == null) {
+    return "";
+  }
+
+  return PhoneModel[modelNumber] || "";
+}
+
+export function getPaymentStatusString(status: number | null): string {
+  if (status == null) {
+    return "";
+  }
+
+  return PaymentStatus[status] || "";
 }

@@ -92,9 +92,11 @@ const incrementUserNotificationCounter = async (
 ): Promise<OgUserNotifications> => {
   try {
     // 1. Get the current value of the notification counter
+
+    const notificationTypeStr = notificationType as string;
     const existingNotification = await db
       .selectFrom("og.userNotifications")
-      .select([notificationType]) // Select only the specific notificationType column
+      .select([notificationTypeStr]) // Select only the specific notificationType column
       .where("userIdFk", "=", userIdFk)
       .executeTakeFirst();
 

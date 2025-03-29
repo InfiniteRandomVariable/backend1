@@ -110,7 +110,8 @@ export const sendGenericNotifications = async (
   notificationSubject: string,
   notificationMessage: string,
   internalNotificationType: NotificationType, // Pass the specific notification type
-  receiverDetails: OgUserDetails | null = null
+  receiverDetails: OgUserDetails | null = null,
+  shouldSMS: boolean = false
 ) => {
   try {
     const shouldUseReceiveDetails =
@@ -129,7 +130,7 @@ export const sendGenericNotifications = async (
       const emailSubject = notificationSubject;
       const emailBody = `${notificationMessage}\n\nView details here: theBestUsedPhones.com\n\nBest regards,\nThe Best Used Phones Team`; // Removed uName from the greeting
 
-      if (recipientDetails.phone) {
+      if (recipientDetails.phone && shouldSMS) {
         await sendSMS(recipientDetails.phone, smsMessage);
       } else {
         console.log(

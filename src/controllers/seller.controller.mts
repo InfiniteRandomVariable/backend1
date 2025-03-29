@@ -4,7 +4,12 @@ import { db } from "../db/database.mts";
 import { getUserDetailsList } from "../utils/user.mts";
 import { ReviewPurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 import { extractUserInfo } from "../utils/auth.mts";
-import { containsAnyUserRoles } from "../utils/commonUtil.mjs";
+import {
+  containsAnyUserRoles,
+  getPhoneModelString,
+  getPaymentStatusString,
+} from "../utils/commonUtil.mjs";
+
 import { z } from "zod";
 import {
   PurchaseOfferStatus,
@@ -14,7 +19,11 @@ import {
   PaymentStatus,
 } from "../db/types.mjs";
 import { sendGenericNotifications } from "../utils/notification.mts";
-
+interface PaymentDetails {
+  buyerUserIdFk: number;
+  model?: number | null; // Make model optional as it might not always be there
+  title?: string | null; // Make title optional as it might not always be there
+}
 /**
  * @controller POST /api/trades/offers/:purchaseOfferId/review
  * @desc Seller reviews a purchase offer, selects arbiters (if accepting), and accepts/rejects the offer.
@@ -369,29 +378,101 @@ const updateSellerPaymentSchema = z.object({
 });
 
 type UpdateSellerPaymentPayload = z.infer<typeof updateSellerPaymentSchema>;
+async function handleSuccessfulPaymentUpdate(
+  paymentId: number,
+  payment: PaymentDetails,
+  parsedBody: UpdateSellerPaymentPayload,
+  notificationType: NotificationType,
+  res: Response
+) {
+  const buyerUserId = payment.buyerUserIdFk;
+  const phoneString =
+    payment.model !== undefined ? getPhoneModelString(payment.model) : "";
+  const productString = payment.title ? payment.title : "";
+  const statusString =
+    parsedBody.status !== undefined
+      ? getPaymentStatusString(parsedBody.status)
+      : "";
+  const itemName = phoneString ? phoneString : productString;
+  const message = `PaymentId:${paymentId} for item ${itemName} updated to ${statusString} status `;
 
+  sendGenericNotifications(
+    buyerUserId,
+    message,
+    message,
+    notificationType // Assuming this NotificationType exists
+  );
+  return res.status(200).json({ message: "Payment updated successfully." });
+}
 export const updateSellerPaymentController = async (
   req: Request,
   res: Response
 ) => {
   try {
+    const user = extractUserInfo(req);
     const paymentId = parseInt(req.params.paymentId, 10);
-    const sellerUserId = req.user?.id;
-
+    const sellerUserId = user.userId;
+    // 1. Validate request body using Zod
+    const parsedBody: UpdateSellerPaymentPayload =
+      updateSellerPaymentSchema.parse(req.body);
     if (isNaN(paymentId) || paymentId <= 0) {
       return res.status(400).json({ message: "Invalid paymentId." });
+    }
+
+    if (
+      containsAnyUserRoles(user.userRoles, [
+        UserRolesEnum.Admin,
+        UserRolesEnum.Staff,
+      ])
+    ) {
+      const paymentDetailsForAdmin = (await db
+        .selectFrom("og.payments")
+        .innerJoin(
+          "og.purchaseOffers",
+          "og.payments.purchaseOfferIdFk",
+          "og.purchaseOffers.id"
+        )
+        .leftJoin("og.phones", "og.purchaseOffers.phoneIdFk", "og.phones.id")
+        .leftJoin(
+          "og.products",
+          "og.purchaseOffers.productIdFk",
+          "og.products.id"
+        )
+        .where("og.payments.id", "=", paymentId)
+        .select([
+          "og.purchaseOffers.buyerUserIdFk",
+          "og.phones.model",
+          "og.products.title",
+        ])
+        .executeTakeFirst()) as PaymentDetails; // Type assertion
+
+      if (paymentDetailsForAdmin) {
+        const updatedPayment = await db
+          .updateTable("og.payments")
+          .set(parsedBody)
+          .where("id", "=", paymentId)
+          .executeTakeFirst();
+
+        if (updatedPayment) {
+          return handleSuccessfulPaymentUpdate(
+            paymentId,
+            paymentDetailsForAdmin,
+            parsedBody,
+            NotificationType.PaymentUpdates,
+            res
+          );
+        } else {
+          return res.status(500).json({ message: "Failed to update payment." });
+        }
+      }
     }
 
     if (!sellerUserId) {
       return res.status(401).json({ message: "Unauthorized." });
     }
 
-    // 1. Validate request body using Zod
-    const parsedBody: UpdateSellerPaymentPayload =
-      updateSellerPaymentSchema.parse(req.body);
-
     // 2. Fetch the payment record to verify ownership
-    const payment = await db
+    const payment = (await db
       .selectFrom("og.payments")
       .innerJoin(
         "og.purchaseOffers",
@@ -407,12 +488,17 @@ export const updateSellerPaymentController = async (
       .where("og.payments.id", "=", paymentId)
       .where((eb) =>
         eb.or([
-          eb("og.phones.userIdFk", "=", parseInt(sellerUserId, 10)),
-          eb("og.products.userIdFk", "=", parseInt(sellerUserId, 10)),
+          eb("og.phones.userIdFk", "=", sellerUserId),
+          eb("og.products.userIdFk", "=", sellerUserId),
         ])
       )
-      .select(["og.payments.id"])
-      .executeTakeFirst();
+      .select([
+        "og.payments.id",
+        "og.purchaseOffers.buyerUserIdFk",
+        "og.phones.model",
+        "og.products.title",
+      ])
+      .executeTakeFirst()) as PaymentDetails;
 
     if (!payment) {
       return res.status(404).json({
@@ -429,7 +515,13 @@ export const updateSellerPaymentController = async (
       .executeTakeFirst();
 
     if (updatedPayment) {
-      return res.status(200).json({ message: "Payment updated successfully." });
+      return handleSuccessfulPaymentUpdate(
+        paymentId,
+        payment,
+        parsedBody,
+        NotificationType.PaymentUpdates,
+        res
+      );
     } else {
       return res.status(500).json({ message: "Failed to update payment." });
     }
