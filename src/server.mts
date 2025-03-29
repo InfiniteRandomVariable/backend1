@@ -9,6 +9,7 @@ import arbiterRouter from "./api/arbiter.mts";
 import paymentRouter from "./api/payments.mts";
 import adminRouter from "./api/admin.mts";
 import sellerRouter from "./api/sellers.mts";
+import buyerRouter from "./api/buyers.mts";
 import tradeRouter from "./api/trades.mts";
 import messageRouter from "./api/messages.mjs";
 import { Request, Response } from "express";
@@ -56,8 +57,8 @@ app.use("/api/trades", tradeRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/messages", messageRouter);
-
 app.use("/api/sellers", sellerRouter);
+app.use("/api/buyers", buyerRouter);
 app
   .listen(port, () => {
     console.log(`Backend server is running on port ${port}`);
