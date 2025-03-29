@@ -1,6 +1,9 @@
 // backend/src/api/sellers.mts
 import { Router } from "express";
-import { getSellerPaymentsController } from "../controllers/seller.controller.mjs"; // Adjust the path to your payment controller
+import {
+  getSellerPaymentsController,
+  updateSellerPaymentController,
+} from "../controllers/seller.controller.mjs"; // Adjust the path to your payment controller
 import {
   authenticateTokenUserAuth,
   authorizeRole,
@@ -25,6 +28,17 @@ router.get(
     UserRolesEnum.Admin,
   ]),
   getSellerPaymentsController
+);
+router.patch(
+  "/payment/:paymentId",
+  authenticateTokenUserAuth,
+  authorizeRole([
+    UserRolesEnum.Seller,
+    UserRolesEnum.Staff,
+    UserRolesEnum.Admin,
+    UserRolesEnum.Arbiter,
+  ]),
+  updateSellerPaymentController
 );
 
 export default router;

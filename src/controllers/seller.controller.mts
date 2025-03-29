@@ -1,16 +1,17 @@
 // src/controllers/seller.controller.mts
 import { Request, Response } from "express";
-import { CreatePurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 import { db } from "../db/database.mts";
 import { getUserDetailsList } from "../utils/user.mts";
 import { ReviewPurchaseOfferRequest } from "../db/zod/types.zod.mjs";
 import { extractUserInfo } from "../utils/auth.mts";
 import { containsAnyUserRoles } from "../utils/commonUtil.mjs";
+import { z } from "zod";
 import {
   PurchaseOfferStatus,
   ProductStatus,
   NotificationType,
   UserRolesEnum,
+  PaymentStatus,
 } from "../db/types.mjs";
 import { sendGenericNotifications } from "../utils/notification.mts";
 
@@ -358,6 +359,89 @@ export const getSellerPaymentsController = async (
     console.error("Error fetching seller payments:", error);
     return res.status(500).json({
       message: "Failed to fetch payment records.",
+      error: error.message,
+    });
+  }
+};
+
+const updateSellerPaymentSchema = z.object({
+  status: z.nativeEnum(PaymentStatus), // Assuming 'status' is a number in your enum
+});
+
+type UpdateSellerPaymentPayload = z.infer<typeof updateSellerPaymentSchema>;
+
+export const updateSellerPaymentController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const paymentId = parseInt(req.params.paymentId, 10);
+    const sellerUserId = req.user?.id;
+
+    if (isNaN(paymentId) || paymentId <= 0) {
+      return res.status(400).json({ message: "Invalid paymentId." });
+    }
+
+    if (!sellerUserId) {
+      return res.status(401).json({ message: "Unauthorized." });
+    }
+
+    // 1. Validate request body using Zod
+    const parsedBody: UpdateSellerPaymentPayload =
+      updateSellerPaymentSchema.parse(req.body);
+
+    // 2. Fetch the payment record to verify ownership
+    const payment = await db
+      .selectFrom("og.payments")
+      .innerJoin(
+        "og.purchaseOffers",
+        "og.payments.purchaseOfferIdFk",
+        "og.purchaseOffers.id"
+      )
+      .leftJoin("og.phones", "og.purchaseOffers.phoneIdFk", "og.phones.id")
+      .leftJoin(
+        "og.products",
+        "og.purchaseOffers.productIdFk",
+        "og.products.id"
+      )
+      .where("og.payments.id", "=", paymentId)
+      .where((eb) =>
+        eb.or([
+          eb("og.phones.userIdFk", "=", parseInt(sellerUserId, 10)),
+          eb("og.products.userIdFk", "=", parseInt(sellerUserId, 10)),
+        ])
+      )
+      .select(["og.payments.id"])
+      .executeTakeFirst();
+
+    if (!payment) {
+      return res.status(404).json({
+        message:
+          "Payment record not found or not associated with your listings.",
+      });
+    }
+
+    // 3. Update the payment record
+    const updatedPayment = await db
+      .updateTable("og.payments")
+      .set(parsedBody)
+      .where("id", "=", paymentId)
+      .executeTakeFirst();
+
+    if (updatedPayment) {
+      return res.status(200).json({ message: "Payment updated successfully." });
+    } else {
+      return res.status(500).json({ message: "Failed to update payment." });
+    }
+  } catch (error: any) {
+    console.error("Error updating seller payment:", error);
+    if (error instanceof z.ZodError) {
+      return res
+        .status(400)
+        .json({ message: "Invalid request body", errors: error.errors });
+    }
+    return res.status(500).json({
+      message: "Failed to update payment.",
       error: error.message,
     });
   }
